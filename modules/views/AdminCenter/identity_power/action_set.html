@@ -1,0 +1,104 @@
+<div class="wrapper-md ng-scope" ng-controller="ActionSet">
+    <div class="col-sm-6">
+        <div id="f_json" class="hidden">
+            <script type="application/javascript">
+                {$show:f_json}
+            </script>
+        </div>
+        <form name="form" enctype="multipart/form-data" class="form-horizontal form-validation ng-pristine ng-invalid-required ng-valid">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <span class="h4">添加新的功能模块</span>
+                </div>
+
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="col-sm-12 control-label text-danger-dker font-bold">此功能只支持程序开发者操作，请不要随意操作</label>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">功能名称</label>
+                        <div class="col-sm-9">
+                            <input placeholder="功能名称【英文+数字+下划线+中划线】"
+                                   class="form-control ng-dirty ng-valid ng-valid-required" required="" ng-model="f_name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">功能标题</label>
+                        <div class="col-sm-9">
+                            <input ng-model="f_title" placeholder="功能标题"
+                                   class="form-control ng-dirty ng-valid ng-valid-required" required="">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">功能排序</label>
+                        <div class="col-sm-9">
+                            <input ng-model="f_sort" placeholder="功能排序"
+                                   class="form-control ng-dirty ng-valid ng-valid-required" required="">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">菜单显示</label>
+                        <div class="col-sm-9">
+                            <select id="f_show" name="f_show" title="菜单显示"
+                                    class="form-control ng-pristine ng-invalid ng-invalid-required">
+                                <option value="1">显示</option>
+                                <option value="0">隐藏</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">功能级别</label>
+                        <div class="col-sm-9">
+                            <label class="checkbox-inline i-checks">
+                                <input name="f_lv" ng-click="changeFLevel(1)"
+                                       type="radio"><i></i>主模块</label>
+                            <label class="checkbox-inline i-checks">
+                                <input name="f_lv" type="radio"
+                                       ng-click="changeFLevel(2)"><i></i>子模块</label>
+                            <label class="checkbox-inline i-checks">
+                                <input name="f_lv" type="radio"
+                                       ng-click="changeFLevel(3)"><i></i>功能模块</label>
+                        </div>
+                    </div>
+
+                    <div id="f_parent_1" class="form-group">
+                        <label class="col-sm-3 control-label">所属主模块</label>
+                        <div class="col-sm-9">
+                            <select name="f_parent_1" title="所属主模块"
+                                    class="form-control ng-pristine ng-invalid ng-invalid-required"
+                                    ng-model="f_parent.one" data-ng-bind-html="f_parent_list.one"
+                                    ng-change="changeParentOne()">
+                            </select>
+                        </div>
+                    </div>
+                    <div id="f_parent_1_ico" class="form-group">
+                        <label class="col-sm-3 control-label">子模块小图标</label>
+                        <div class="col-sm-9">
+                            <input ng-model="f_parent_2_ico" placeholder="子模块小图标，请前往 bootstrap 寻找"
+                                   class="form-control ng-dirty ng-valid ng-valid-required">
+                        </div>
+                    </div>
+                    <div id="f_parent_2" class="form-group">
+                        <label class="col-sm-3 control-label">所属子模块</label>
+                        <div class="col-sm-9">
+                            <select name="f_parent_2" title="所属子模块"
+                                    class="form-control ng-pristine ng-invalid ng-invalid-required"
+                                    ng-model="f_parent.two" data-ng-bind-html="f_parent_list.two"
+                                    ng-change="changeParentTwo()">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <footer class="panel-footer text-right bg-light lter">
+                    <button type="submit" class="btn btn-success pull-right" ng-disabled="form.$invalid" disabled="disabled" ng-click="postNewAction()">添加</button>
+                    <label class="text-danger-dker m-r" ng-model="AuthError">{{AuthError}}</label>
+                    <div class="clearfix"></div>
+                </footer>
+            </div>
+        </form>
+    </div>
+
+</div>

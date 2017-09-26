@@ -1,0 +1,86 @@
+<div class="wrapper-md ng-scope">
+    <div class="col-lg-6">
+        <form name="user" method="post" action="{$show:edit_post_url}" enctype="multipart/form-data"
+              class="form-horizontal form-validation ng-pristine ng-invalid ng-invalid-required">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>编辑操作员详细</strong>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="col-sm-3 text-right">创建日期</label>
+                        <label class="col-sm-9">{$show->c_time}</label>
+                    </div>
+                    <div class="line line-dashed b-b line-lg pull-in"></div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">登录邮箱</label>
+                        <div class="col-sm-9">
+                            <input class="form-control ng-pristine ng-invalid ng-invalid-required ng-valid-email"
+                                   type="email" required="" name="email" placeholder="登录邮箱"
+                                   value="{$show->email}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">登录密码</label>
+                        <div class="col-sm-9">
+                            <input class="form-control ng-pristine ng-invalid ng-invalid-required ng-valid-email"
+                                   type="text" required="" name="pwd"
+                                   ng-pattern="/^[\s\S]{6,15}$/" placeholder="中文除外的6-15位任意字符"
+                                   value="{$show->pwd}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">昵称</label>
+                        <div class="col-sm-9">
+                            <input class="form-control ng-pristine ng-invalid ng-invalid-required ng-valid-email"
+                                   placeholder="昵称" type="text" required="" name="name"
+                                   value="{$show->name}">
+                        </div>
+                    </div>
+                    <div class="line line-dashed b-b line-lg pull-in"></div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">使用状态</label>
+                        <div class="col-sm-9">
+                            <select name="status" title="状态"
+                                    class="form-control ng-pristine ng-invalid ng-invalid-required">
+                                <option value="">请选择</option>
+                               {$show->select_status}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="line line-dashed b-b line-lg pull-in"></div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">所属操作组</label>
+                        <div class="col-sm-9">
+                            <select name="group" title="操作组"
+                                    class="form-control ng-pristine ng-invalid ng-invalid-required">
+                                <option value="">未分配</option>
+                                {$show->select_group}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 text-right">身份</label>
+                        <label class="col-sm-9">{$show->rank}</label>
+                    </div>
+                </div>
+                <footer class="panel-footer text-right bg-light lter">
+                    <button type="submit" class="btn btn-success">修改</button>
+                </footer>
+            </div>
+        </form>
+    </div>
+    <div class="col-lg-6">
+        <div class="panel panel-info ">
+            <div class=" panel-heading font-bold">
+                <span>登录日志/间隔3小时记录一次</span>
+            </div>
+
+            <div class="panel panel-body">
+                {$show->sign_log}
+            </div>
+        </div>
+        </div>
+</div>

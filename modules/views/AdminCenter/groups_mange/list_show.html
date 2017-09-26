@@ -1,0 +1,34 @@
+<div class="wrapper-md ng-scope">
+    <div class="panel panel-default">
+        <div class="table-responsive">
+            <table ui-jq="dataTable" ui-options="{
+          sAjaxSource: '{$url->AdminCenter->groups_mange->groups_json}',
+          aoColumns: [
+            { mData: 'name' },
+            { mData: 'leader' },
+            { mData: 'verify_power' },
+            { mData: 'user_num' },
+            { mData: 'customer_num' },
+            { mData: 'time' },
+            { mData: 'status' },
+            { mData: 'mange_url' }
+          ]
+        }" class="table table-striped m-b-none">
+                <thead>
+                <tr>
+                    <th style="width:15%">操作组</th>
+                    <th style="width:15%">组长</th>
+                    <th style="width:10%">权限</th>
+                    <th >操作员数量<br>总数/停用</th>
+                    <th >客户数量<br>已分配/总数</th>
+                    <th style="width:10%">创建时间</th>
+                    <th style="width:10%">状态</th>
+                    <th>管理</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

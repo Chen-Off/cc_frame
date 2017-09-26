@@ -1,0 +1,49 @@
+<div class="wrapper-md ng-scope">
+    <div class="col-sm-6">
+        <form name="form" method="post" action="{$brtUrl->now}" enctype="multipart/form-data"
+              class="form-horizontal form-validation ng-pristine ng-invalid ng-invalid-required">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <span class="h4">添加新的操作员</span>
+                </div>
+
+
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">昵称</label>
+                        <div class="col-sm-9">
+                            <input class="form-control ng-dirty ng-valid ng-valid-required" required="" ng-model="user.name"  name="name" placeholder="昵称">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">登录邮箱</label>
+                        <div class="col-sm-9">
+                            <input class="form-control ng-dirty ng-valid ng-valid-required" required="" type="user.email" placeholder="登录邮箱" name="email">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">登录密码</label>
+                        <div class="col-sm-9">
+                            <input class="form-control ng-dirty ng-valid ng-valid-required" required="" ng-model="user.pwd"　 name="pwd" ng-pattern="/^[\s\S]{6,15}$/" placeholder="中文除外的6-15位任意字符">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">基本身份</label>
+                        <div class="col-sm-9">
+                            <select name="rank" title="基本身份"
+                                    class="form-control ng-pristine ng-invalid ng-invalid-required">
+                                <option value="3">客服操作员</option>
+                                <option value="7">前台</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <footer class="panel-footer text-right bg-light lter">
+                    <button type="submit" class="btn btn-success" ng-disabled="form.$invalid" disabled="disabled">添加
+                    </button>
+                </footer>
+            </div>
+        </form>
+    </div>
+
+</div>

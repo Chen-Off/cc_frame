@@ -1,0 +1,62 @@
+<div class="wrapper-md ng-scope">
+    <div class="col-lg-8">
+        <form name="user" method="post" action="{$show->mange_post_url}" enctype="multipart/form-data"
+              class="form-horizontal form-validation ng-pristine ng-invalid ng-invalid-required">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>管理操作组</strong>
+                </div>
+                <div class="panel-body">
+
+                    <div class="form-group">
+                        <label class="col-sm-3 text-right">组名</label>
+                        <label class="col-sm-9">{$show->name} / {$show->c_time}</label>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 text-right">组长</label>
+                        <label class="col-sm-9">{$show->leader}</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 text-right">组员</label>
+                        <label class="col-sm-9">{$show->team}</label>
+                    </div>
+
+                    <div class="line line-dashed b-b line-lg pull-in"></div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">修改新组名</label>
+                        <div class="col-sm-9">
+                            <input class="form-control ng-pristine ng-invalid ng-invalid-required ng-valid-email"
+                                   type="text" required="" name="name" placeholder="组名"
+                                   value="{$show->name}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">设置新组长</label>
+                        <div class="col-sm-9">
+                            <select name="leader" title="状态"
+                                    class="form-control ng-pristine ng-invalid ng-invalid-required">
+                                <option value="">请选择</option>
+                                {$show->select_leader}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">修改使用状态</label>
+                        <div class="col-sm-9">
+                            <select name="status" title="状态"
+                                    class="form-control ng-pristine ng-invalid ng-invalid-required">
+                                <option value="">请选择</option>
+                                {$show->select_status}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <footer class="panel-footer text-right bg-light lter">
+                    <button type="submit" class="btn btn-success">修改</button>
+                </footer>
+            </div>
+        </form>
+    </div>
+</div>

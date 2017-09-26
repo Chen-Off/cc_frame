@@ -1,0 +1,50 @@
+<div class="wrapper-md ng-scope" ng-controller="AuthContent">
+    <div id="f_json" class="hidden">
+        <script type="application/javascript">
+            {$show:f_json}
+        </script>
+    </div>
+    <div class="col-sm-12">
+        <form name="form" method="post" action="{$brtUrl->now}" enctype="multipart/form-data"
+              class="form-horizontal form-validation ng-pristine ng-invalid ng-invalid-required">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <span class="h4">新的授权功能</span>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="col-sm-12 ">授权功能名称</label>
+                            <div class="col-sm-12">
+                                <input name="auth_c_name" placeholder="授权功能名称"
+                                       class="form-control ng-dirty ng-valid ng-valid-required">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <button type="submit" class="btn btn-success" ng-disabled="form.$invalid">添加授权
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8 b-l">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="col-sm-12 ">选择要授权功能</label>
+                        </div>
+
+                        <div class="form-group">
+                            <div id="visitList" class="col-sm-12">
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </form>
+    </div>
+
+</div>

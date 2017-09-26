@@ -1,0 +1,15 @@
+<div class="app-header navbar ng-scope">{$smarty:header/}</div>
+<div class="app-aside hidden-xs bg-black">{$smarty:aside/}</div>
+<div class="app-content ng-scope">
+    <div class="app-content-body fade-in-up ng-scope" ui-view="">
+        <div class="bg-light lter b-b wrapper-md ng-scope">
+            <h1 class="m-n font-thin h3" style="display: inline-block;">{$page:name/}</h1>
+            <span id="breadcrumbs">{$page:breadcrumbs/}</span>
+        </div>
+
+        {$page:alertResult/}
+        {$page:ViewContent/}
+    </div>
+</div>
+{$smarty:app_footer/}
+{$smarty:settings/}

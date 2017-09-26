@@ -1,0 +1,86 @@
+{
+  "header": {
+    "navbar": {
+      "UPLOAD": "上传",
+      "new": {
+        "NEW": "新闻",
+        "PROJECT": "项目",
+        "TASK": "任务",
+        "USER": "用户",
+        "EMAIL": "邮件"
+      },
+      "NOTIFICATIONS": "通知"
+    }
+  },
+  "aside": {
+    "menu": {
+      "HEADER": "功能菜单",
+      "admin": {
+        "HEADER": "管理员控制中心",
+        "ACCOUNT": "帐号管理",
+        "GROUPS": "分组管理",
+        "PROGRAM": "模块菜单管理"
+      }
+    },
+    "nav": {
+      "HEADER": "导航",
+      "DASHBOARD": "首页导航",
+      "CALENDAR": "日历",
+      "EMAIL": "电子邮件",
+      "WIDGETS": "数据小结",
+      "components": {
+        "COMPONENTS": "组件",
+        "layout": {
+          "LAYOUT": "布局设计",
+          "LAYOUT_APPLICATION": "应用",
+          "LAYOUT_FULL_WIDTH": "全屏式",
+          "LAYOUT_MOBILE": "流动式"
+        },
+        "ui_kits": {
+          "UI_KITS": "UI 套件",
+          "BUTTONS": "按钮",
+          "ICONS": "图标",
+          "GRID": "格子",
+          "BOOTSTRAP": "Bootstrap",
+          "SORTABLE": "分类表格",
+          "PORTLET": "Portlet",
+          "TIMELINE": "时间轴",
+          "VECTOR_MAP": "世界地图",
+          "GOOGLE_MAP": "谷歌地图"
+        },
+        "table": {
+          "TABLE": "表格",
+          "TABLE_STATIC": "静态表格",
+          "DATATABLE": "数据表格",
+          "FOOTABLE": "脚本表格"
+        },
+        "form": {
+          "FORM": "表单",
+          "FORM_ELEMENTS": "表单元素",
+          "FORM_VALIDATION": "表单验证",
+          "FORM_WIZARD": "表单向导"
+        },
+        "CHART": "图表",
+        "pages": {
+          "PAGES": "页面",
+          "PROFILE": "简介",
+          "POST": "提交",
+          "SEARCH": "搜索",
+          "INVOICE": "单据",
+          "LOCK_SCREEN": "锁定屏幕",
+          "SIGNIN": "登陆",
+          "SIGNUP": "注册",
+          "FORGOT_PASSWORD": "忘记密码",
+          "404": "404"
+        }
+      },
+      "your_stuff": {
+        "YOUR_STUFF": "私人中心",
+        "PROFILE": "简介",
+        "DOCUMENTS": "文件"
+      }
+    },
+    "MILESTONE": "里程碑",
+    "RELEASE": "发布"
+  }
+}

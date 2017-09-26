@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" data-ng-app="app">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{$page:MetaTitle/}</title>
+    <base href="{$page:DomainUrl/}/"/>
+    {$page:StyleIco/}
+
+    <link rel="stylesheet" href="tpl/styles/css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="tpl/styles/css/animate.css" type="text/css"/>
+    <link rel="stylesheet" href="tpl/styles/css/font-awesome.min.css" type="text/css"/>
+    <link rel="stylesheet" href="tpl/styles/css/simple-line-icons.css" type="text/css"/>
+    <link rel="stylesheet" href="tpl/styles/css/font.css" type="text/css"/>
+    <link rel="stylesheet" href="tpl/styles/css/app.css" type="text/css"/>
+    <link rel="stylesheet" href="tpl/styles/css/y_rule.css" type="text/css"/>
+
+    {$page:StyleCss/}
+</head>
+<body ng-controller="AppCtrl">
+<div class="app" id="app"
+     ng-class="{'app-header-fixed':app.settings.headerFixed, 'app-aside-fixed':app.settings.asideFixed, 'app-aside-folded':app.settings.asideFolded}"
+     ui-view>
+    {$page:pageFile/}
+</div>
+
+
+<!-- jQuery -->
+<script src="tpl/styles/js/jquery/jquery.min.js"></script>
+<!-- Angular -->
+<script src="tpl/styles/js/angular/angular.min.js"></script>
+<script src="tpl/styles/js/angular/angular-sanitize.min.js"></script>
+<script src="tpl/styles/js/angular/angular-cookies.min.js"></script>
+<script src="tpl/styles/js/angular/angular-animate.min.js"></script>
+<script src="tpl/styles/js/angular/angular-ui-router.min.js"></script>
+<script src="tpl/styles/js/angular/angular-translate.js"></script>
+<script src="tpl/styles/js/angular/angular-locale_zh-cn.js"></script>
+<script src="tpl/styles/js/angular/ngStorage.min.js"></script>
+<script src="tpl/styles/js/angular/ui-load.js"></script>
+<script src="tpl/styles/js/angular/ui-jq.js"></script>
+<script src="tpl/styles/js/angular/ui-validate.js"></script>
+<script src="tpl/styles/js/angular/ui-bootstrap-tpls.min.js"></script>
+<!-- App -->
+<script src="tpl/styles/js/app.js"></script>
+<script src="tpl/styles/js/services.js"></script>
+<script src="tpl/styles/js/controllers.js"></script>
+<script src="tpl/styles/js/filters.js"></script>
+<script src="tpl/styles/js/directives.js"></script>
+<!-- Lazy loading -->
+
+<!-- Model -->
+{$page:StyleJs/}
+</body>
+</html>

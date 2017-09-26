@@ -1,0 +1,35 @@
+<div class="wrapper-md ng-scope">
+    <div class="col-lg-6">
+        <form name="user" method="post" action="{$brtUrl->now}" enctype="multipart/form-data"
+              class="form-horizontal form-validation ng-pristine ng-invalid ng-invalid-required">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>修改登录密码</strong>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">原始密码</label>
+                        <div class="col-sm-9">
+                            <input class="form-control ng-pristine ng-invalid ng-invalid-required ng-valid-email"
+                                   type="text" required="" name="o_pwd"
+                                   ng-pattern="/^[\s\S]{6,15}$/" placeholder="中文除外的6-15位任意字符"
+                                   value="" ng-model="o_pwd">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">新的密码</label>
+                        <div class="col-sm-9">
+                            <input class="form-control ng-pristine ng-invalid ng-invalid-required ng-valid-email"
+                                   type="text" required="" name="n_pwd"
+                                   ng-pattern="/^[\s\S]{6,15}$/" placeholder="中文除外的6-15位任意字符"
+                                   value="" ng-mode="n_pwd">
+                        </div>
+                    </div>
+                </div>
+                <footer class="panel-footer text-right bg-light lter">
+                    <button type="submit" class="btn btn-success" ng-disabled='user.$invalid'>修改</button>
+                </footer>
+            </div>
+        </form>
+    </div>
+</div>

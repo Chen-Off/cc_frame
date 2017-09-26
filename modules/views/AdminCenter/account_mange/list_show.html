@@ -1,0 +1,33 @@
+<div class="wrapper-md ng-scope">
+
+    <div class="panel panel-default">
+        <div class="table-responsive">
+            <table ui-jq="dataTable" ui-options="{
+          sAjaxSource: '{$url->AdminCenter->account_mange->groups_json}',
+          aoColumns: [
+            { mData: 'name' },
+            { mData: 'group' },
+            { mData: 'rank' },
+            { mData: 'plan' },
+            { mData: 'last_login' },
+            { mData: 'status' },
+            { mData: 'edit_url' }
+          ]
+        }" class="table table-striped m-b-none">
+                <thead>
+                <tr>
+                    <th style="width:15%">操作员</th>
+                    <th style="width:15%">操作组</th>
+                    <th style="width:15%">身份</th>
+                    <th style="width:20%">客户资源(未计划 / 全部)</th>
+                    <th style="width:15%">最后登录</th>
+                    <th style="width:10%">状态</th>
+                    <th>编辑</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
