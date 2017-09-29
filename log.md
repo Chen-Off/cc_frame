@@ -94,7 +94,7 @@ return [
 >>>[-Index](#-Index)
 >>>>lang.php
 
-```
+```diff
 return [
    'name' => '主模块名称',
    
