@@ -32,12 +32,12 @@ class Config
 
     /**
      * 获取模块配置文件
-     * M
+     * getM
      * @param $params [description] 参数名称
      * @param null $modules [description] 模块名称
      * @return bool|mixed
      */
-    public static function M($params, $modules = null)
+    public static function getM($params, $modules = null)
     {
         if (null === $modules) {
             $modules = URL_MODULES;
@@ -74,49 +74,49 @@ class Config
 
     /**
      * 获取额外配置参数
-     * DB
+     * getDB
      * @param null $param
      * @return bool|mixed
      */
-    public static function DB($param = null)
+    public static function getDB($param = null)
     {
-        return self::C('DB', $param);
+        return self::getC('DB', $param);
     }
 
     /**
      * 获取额外配置参数
-     * CE
+     * getCE
      * @param null $params
      * @param null $param2
      * @return bool|mixed
      */
-    public static function CE($params = null, $param2 = null)
+    public static function getCE($params = null, $param2 = null)
     {
-        return self::C('CE', $params, $param2);
+        return self::getC('CE', $params, $param2);
     }
 
     /**
      * 获取基本配置参数
-     * CB
+     * getCB
      * @param null $params
      * @param null $param2
      * @return bool|mixed
      */
-    public static function CB($params = null, $param2 = null)
+    public static function getCB($params = null, $param2 = null)
     {
-        return self::C('CB', $params, $param2);
+        return self::getC('CB', $params, $param2);
     }
 
 
     /**
      * 获取公共配置指定内容
-     * C
+     * getC
      * @param null $name [description] 配置文件名称
      * @param null $params [description] 配置文件某个参数
      * @param null $param2 [description] 配置文件某个参数
      * @return bool|mixed
      */
-    public static function C($name = null, $params = null, $param2 = null)
+    public static function getC($name = null, $params = null, $param2 = null)
     {
         //惰性加载载入配置文件
         if (empty(self::$CommonConfig)) {
@@ -164,7 +164,7 @@ class Config
      * @param $modulesName [description] 模块名称
      * @return bool|array
      */
-    public static function loadModules($modulesName)
+    private static function loadModules($modulesName)
     {
         $filePath = MVC_CONTROLLER_PATH . $modulesName . DS . 'config' . EXT;
         $config = cc__requireFile($filePath, true);

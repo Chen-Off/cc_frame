@@ -6,7 +6,7 @@ class DeBug {
     function __construct()
     {
         self::$logPath = TEMP_EP_HTTP.DS.'log'.DS;
-        if(!is_dir(self::$logPath)) mkdir(self::$logPath, 0755, true);
+        if(!is_dir(self::$logPath)) mkdir(self::$logPath, 0744, true);
     }
 
     public static function record($msg, $type) {
@@ -18,7 +18,7 @@ class DeBug {
 
     public static function msgExit($msg = '')
     {
-        if(true === Config::CB('debug_show')) {
+        if(true === Config::getCB('debug_show')) {
             echo $msg;
         }
         die;

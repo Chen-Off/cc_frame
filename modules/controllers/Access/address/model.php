@@ -2,9 +2,9 @@
 namespace Access\Model;
 
 use cc\Cache;
-use CommonClass\Common_Class;
 
-class address_model extends Common_Class
+
+class address_model
 {
     /**
      * getCache

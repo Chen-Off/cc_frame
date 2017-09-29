@@ -11,13 +11,14 @@
 /**
  * 获取上(N)级目录路径
  * cc__parentDir
- * @param $dir
- * @param int $parentLevel
+ * @param $dir [description]   检索文件路径
+ * @param int $parentLevel [description]   上级层次
  * @return array|string
  */
-function cc__parentDir($dir, $parentLevel = 1) {
+function cc__parentDir($dir, $parentLevel = 1)
+{
     $dir = str_replace('/', DS, $dir);
-    if(substr($dir, -1) == DS) {
+    if (substr($dir, -1) == DS) {
         $dir = substr($dir, 0, -1);
         $endDS = DS;
     } else {
@@ -27,7 +28,7 @@ function cc__parentDir($dir, $parentLevel = 1) {
     for ($i = 1; $i <= $parentLevel; $i++) {
         array_pop($dir);
     }
-    $dir = implode(DS, $dir).$endDS;
+    $dir = implode(DS, $dir) . $endDS;
     return $dir;
 }
 
@@ -35,9 +36,9 @@ function cc__parentDir($dir, $parentLevel = 1) {
  * 上传图片
  * 2017年8月19日 15:21:35
  * cc__uploadImg
- * @param $file
- * @param null $path
- * @param null $name
+ * @param $file [description]   图片文件
+ * @param null $path [description]   保存路径
+ * @param null $name [description]   保存名称
  * @return bool|null|string
  */
 function cc__uploadImg($file, $path, $name = null)
@@ -66,10 +67,87 @@ function cc__uploadImg($file, $path, $name = null)
 }
 
 /**
+ * 验证指定的数组中KEY是否存在
+ * 2017年9月28日 15:44:04
+ * oauth_post_params
+ * @param array $array [description]   需要验证的数据
+ * @param array $params [description]   需要验证的参数
+ * @param bool|string $dataType [description]   是否验证特定的数据类型
+ * @return bool
+ */
+function cc__oauthArrayParams($array, $params, $dataType = false)
+{
+    if (!is_array($params) || !is_array($array)) {
+        return false;
+    }
+    foreach ($params as $v) {
+        if (!isset($array[$v])) {
+            return false;
+        }
+
+        if (false !== $dataType) {
+            $str = $array[$v];
+            switch ($dataType) {
+                case 'number':
+                    if (!is_numeric($str) || $str == '') return false;
+                    break;
+                case 'array':
+                    if (!is_array($str) || empty($str)) return false;
+                    break;
+            }
+        }
+    }
+    return true;
+}
+
+/**
+ * 字符串编码转换
+ * 2017年9月28日 15:39:17
+ * cc__stringCodeChange
+ * @param $string [description]   字符串
+ * @param string $beforeCode [description]   本身编码
+ * @param string $afterCode [description]   转换编码
+ * @return string
+ */
+function cc__stringCodeChange($string, $beforeCode = 'GB2312', $afterCode = 'UTF-8')
+{
+    $result = '';
+    if (is_array($string)) {
+        foreach ($string as $k => $v) {
+            $result[$k] = cc__stringCodeChange($v);
+        }
+    } else {
+        if (!empty(trim($string))) {
+            $result = iconv($beforeCode, $afterCode, $string);
+        } else {
+            $result = $string;
+        }
+    }
+    return $result;
+}
+
+/**
+ * 设定页面格式，并输出内容
+ * 2017年9月28日 15:39:20
+ * cc__outputPage
+ * @param $outputData [description]   输出数据
+ * @param string $pageCode [description]   输出页面格式
+ * @param $jsonEncode [description]   是否压缩
+ */
+function cc__outputPage($outputData, $pageCode = 'json', $jsonEncode = false)
+{
+    if ($pageCode == 'json' || true === $jsonEncode) {
+        $outputData = cc__jsonEncode($outputData, true);
+    }
+    header('Content-Type: application/' . $pageCode);
+    die($outputData);
+}
+
+/**
  * EN JSON 给JS 使用的格式
  * 2017年8月19日 15:20:20
  * cc__jsonEncodeToJs
- * @param $json
+ * @param $json [description]   JSON 数据
  * @return mixed|string
  */
 function cc__jsonEncodeToJs($json)
@@ -85,8 +163,8 @@ function cc__jsonEncodeToJs($json)
  * EN JSON 给JS 是否需要转义
  * 2017年8月19日 15:20:22
  * cc__jsonEncode
- * @param $json
- * @param bool $unicode
+ * @param $json [description]   JSON 数据
+ * @param bool $unicode [description]   是否中文不转义
  * @return string
  */
 function cc__jsonEncode($json, $unicode = false)
@@ -103,36 +181,45 @@ function cc__jsonEncode($json, $unicode = false)
  * 2017年8月21日 22:34:43
  * 判断函数变量是否存在
  * cc__isset
- * @param $array
- * @param $params
- * @param null $empty
- * @return bool
+ * @param $array [description]   需要判断的内容
+ * @param $params [description]   需要检索的KEY
+ * @param null $empty [description]   是否检查控制
+ * @param bool $falseReturn    [description]   错误的结果返回值
+ * @return false|string|array
  */
-function cc__isset($array, $params = [], $empty = null)
+function cc__isset($array, $params = [], $empty = null, $falseReturn = false)
 {
-    $result = false;
+    $result = $falseReturn;
     switch (true) {
-        case empty($params) && isset($array):
-            $result = $array;
+        case empty($params):
+            $result = $falseReturn;
             break;
 
-        case !empty($params) && is_array($array):
-            $params = !is_array($params) ? [$params] : $params;
+        case !is_array($array):
+            $result = $falseReturn;
+            break;
+
+        case is_array($params):
             foreach ($params as $p) {
-                if(is_array($array) && isset($array[$p])) {
-                    $result = $array = $array[$p];
-                } else {
-                    $result = false;
+                if (!is_array($array) || !isset($array[$p])) {
+                    $result = $falseReturn;
                     break;
+                } else {
+                    $result = $array = $array[$p];
                 }
             }
             break;
 
+        case isset($array[$params]):
+            $result = $array[$params];
+            break;
+
     }
 
-    if (false !== $result && null !== $empty && empty($result)) {
-        return false;
+    if ($falseReturn !== $result && null !== $empty && empty($result)) {
+        return $result;
     }
+
     return $result;
 }
 
@@ -224,12 +311,13 @@ function cc__setSession($name, $value)
  * @param $qq
  * @return bool
  */
-function cc__checkQQ($qq) {
-    if(!is_numeric($qq)) {
+function cc__checkQQ($qq)
+{
+    if (!is_numeric($qq)) {
         return false;
     }
     $length = strlen($qq);
-    if($length > 5 && $length < 20) {
+    if ($length > 5 && $length < 20) {
         return true;
     } else {
         return false;
@@ -325,11 +413,11 @@ function cc__stringTrim($data)
 /**
  * 图片压缩
  * cc__resizeImage
- * @param string $im_path 原图路径
- * @param string $maxWidth 新图最大宽度
- * @param string $maxHeight 新图最大高度
- * @param string $name 新图名称
- * @param string $fileType 图片格式
+ * @param string $im_path [description] 原图路径
+ * @param string $maxWidth [description]    新图最大宽度
+ * @param string $maxHeight [description]   新图最大高度
+ * @param string $name [description]    新图名称
+ * @param string $fileType [description]    图片格式
  * @return bool
  */
 function cc__resizeImage($im_path, $maxWidth, $maxHeight, $name, $fileType = 'jpeg')
@@ -420,8 +508,8 @@ function cc__resizeImage($im_path, $maxWidth, $maxHeight, $name, $fileType = 'jp
 /**
  * cc_getRands
  * 获取随机字符串
- * @param string $type 类型
- * @param int $length 数量
+ * @param string $type [description]    类型
+ * @param int $length [description] 数量
  * @return string
  */
 function cc__getRandStr($type, $length)
@@ -430,7 +518,6 @@ function cc__getRandStr($type, $length)
     $letter = 'abcdefghijklmnopqrstuvwhyzABCDEFGHIJKLMNOPQRSTUVWHYZ';
     $number = '1234567890';
 
-    //$randomArr = array("1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "g", "h", "y", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "h", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "Y", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "H", "Y", "Z");
 
     switch ($type) {
         case 'letter':
@@ -456,8 +543,8 @@ function cc__getRandStr($type, $length)
 
 /**
  * 计算两个时间戳之差 请确保两个日期 前小 后大
- * @param $begin_time ['description'] 开始时间戳
- * @param $end_time ['description'] 结束时间戳
+ * @param $begin_time [description] 开始时间戳
+ * @param $end_time [description] 结束时间戳
  * @return false|array
  */
 function cc__timeDiff($begin_time, $end_time)
@@ -482,16 +569,16 @@ function cc__timeDiff($begin_time, $end_time)
 /**
  * 获取特定的时间格式
  * cc_getDate
- * @param string $type 格式|可以直接设置
- * @param bool|int $strTime 时间戳
+ * @param string $type [description]    格式|可以直接设置
+ * @param bool|int $strTime [description]   时间戳
  * @return string
  */
 function cc__getDate($type = 'time', $strTime = false)
 {
-    if(false === $strTime) {
+    if (false === $strTime) {
         $strTime = time();
     }
-    if(empty($strTime) || $strTime > 2147454847 || $strTime < 0) {
+    if (empty($strTime) || $strTime > 2147454847 || $strTime < 0) {
         return false;
     }
     $time = $strTime; //设置正确的时间戳
@@ -543,6 +630,12 @@ function cc__getDate($type = 'time', $strTime = false)
     return date($showType, $time);
 }
 
+/**
+ * 获取日期时间戳
+ * cc__getDateStr
+ * @param string $dateTime [description]   日期格式时间
+ * @return int
+ */
 function cc__getDateStr($dateTime = '')
 {
     if (empty($dateTime)) {
@@ -631,21 +724,23 @@ function cc__detectIp($ip)
  * @param string $path 文件路径
  * @param string $content 写入内容
  * @param string $type 文件打开方式
+ * @return false|int
  */
 function cc__writeTxt($path, $content, $type = 'w')
 {
     $file = fopen($path, $type);
-    fwrite($file, $content);
+    $rs = fwrite($file, $content);
     fclose($file);
+    return $rs;
 }
 
 
 /**
  * 遍历文件夹，获取特定类型的子文件。深入子文件夹
  * cc_listDir
- * @param string $dirPath 文件夹路径
- * @param array|string|array $fileTypes 获取的文件类型
- * @param bool $child 是否遍历子文件夹
+ * @param string $dirPath [description] 文件夹路径
+ * @param array|string|array $fileTypes [description]   获取的文件类型
+ * @param bool $child [description] 是否遍历子文件夹
  * @return array|string
  */
 function cc__listDir($dirPath, $fileTypes = [], $child = false)
@@ -717,28 +812,28 @@ function cc__listDir($dirPath, $fileTypes = [], $child = false)
 /**
  * 复制文件夹内容
  * cc_copyDir
- * @param string $sourceDir 源文件夹
- * @param string $targetDir 目标文件夹
- * @param bool $child 是否复制子文件夹
+ * @param string $sourceDir [description]   源文件夹
+ * @param string $targetDir [description]   目标文件夹
+ * @param bool $child [description] 是否复制子文件夹
  * @return bool
  */
 function cc__copyDir($sourceDir, $targetDir, $child = true)
 {
     //源文件不存在
     if (!is_dir($sourceDir)) {
-        echo '{ccFunctionError: cc_copyDir - [' . $sourceDir . ']未发现该文件夹}';
+        //echo '{ccFunctionError: cc_copyDir - [' . $sourceDir . ']未发现该文件夹}';
         return false;
     }
 
     //创建新的文件夹
-    if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+    if (!is_dir($targetDir)) mkdir($targetDir, 0744, true);
 
     $dir = opendir($sourceDir); //打开文件夹
     //循环访问子文件
     while (($file = readdir($dir)) !== false) {
         if ($file != "." && $file != "..") {
-            $childFile = $sourceDir . "/" . $file;
-            $targetFile = $targetDir . "/" . $file;
+            $childFile = $sourceDir . DS . $file;
+            $targetFile = $targetDir . DS . $file;
             if (is_dir($childFile)) {
                 if ($child === true)
                     cc__copyDir($childFile, $targetFile, $child);
@@ -754,15 +849,15 @@ function cc__copyDir($sourceDir, $targetDir, $child = true)
 /**
  * 删除文件夹
  * cc_delDir
- * @param string $dirPath 文件夹路径
- * @param bool $self 是否删除自己
+ * @param string $dirPath [description] 文件夹路径
+ * @param bool $self [description]  是否删除自己
  * @return bool
  */
 function cc__delDir($dirPath, $self = false)
 {
 
     if (!is_dir($dirPath)) {
-        echo '{ccFunctionError: cc_delDir - [' . $dirPath . ']未发现该文件夹}';
+        //echo '{ccFunctionError: cc_delDir - [' . $dirPath . ']未发现该文件夹}';
         return false;
     }
 
@@ -770,7 +865,7 @@ function cc__delDir($dirPath, $self = false)
     $dir = opendir($dirPath);
     while (($file = readdir($dir)) !== false) {
         if ($file != "." && $file != "..") {
-            $fullPath = $dirPath . "/" . $file;
+            $fullPath = $dirPath . DS . $file;
             if (!is_dir($fullPath)) {
                 unlink($fullPath);
             } else {
@@ -802,4 +897,5 @@ function cc__requireFile($filePath, $back = false)
     } else {
         return false;
     }
+    return true;
 }

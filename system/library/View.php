@@ -40,9 +40,10 @@ class View
 
     }
 
-    public static function lang_data($lang, $tplPath)
+    //设定语言包
+    public static function lang_data($tplPath)
     {
-        self::$lang = $lang;
+        self::$lang = Lang::get();
         self::$tplPath = $tplPath;
     }
 
@@ -111,7 +112,7 @@ class View
 
             //替换页面名称
             if (strpos($content, '{$page:name/}') !== false) {
-                $content = str_replace('{$page:name/}', self::$lang['name'], $content);
+                $content = str_replace('{$page:name/}', self::$lang['action'], $content);
             }
 
             //替换导航内容
@@ -119,24 +120,32 @@ class View
                 $content = str_replace('{$page:breadcrumbs/}', $dealObj->breadcrumbs(), $content);
             }
 
-
             //替换模块语言包
             $content = $dealObj->deal__moduleLang($content);
-
 
             //登录帐号信息
             $content = $dealObj->deal_account($content);
         }
 
         //加载提示结果
-        $content = $dealObj->deal__resultMsg($content);
+        if (strpos($content, '{$page:alertResult/}') !== false) {
+            $content = $dealObj->deal__resultMsg($content);
+        }
 
-        //替换控制端产出的数据
-        $content = $dealObj->deal__viewData($content);
+        //替换分页列表数据
+        if(true === Paginator::start() && stripos($content, '{$show->paginator}') !== false) {
+            $content = $dealObj->deal__viewPaginator($content);
+        }
+
+        //替换常规产出的数据
+        if (!empty($dealObj->data)) {
+            $content = $dealObj->deal__viewData($content);
+        }
+
 
         $content = preg_replace('/{\$.*}/isU', '', $content);
 
-        if(true === Config::CB('TPL', 'compress_html')) {
+        if(true === Config::getCB('TPL', 'compress_html')) {
             $content = $dealObj->compress_html($content);
         }
         return $content;
@@ -152,7 +161,7 @@ class View
         //访问页面主入口HTML文件
         $tplPath = TEMPLATES_PATH . '/page/' . self::$tplPath;
 
-        if (false === Config::CB('tpl','smarty_loader')) {
+        if (false === Config::getCB('tpl','smarty_loader')) {
             //不使用母版页
             $tplContent = self::getFile(MODULES_VIEW_FILE);
         } else {

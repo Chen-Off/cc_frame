@@ -3,9 +3,9 @@ namespace Access\Model;
 
 use cc\Db;
 use ccCrypt\ccCrypt;
-use CommonClass\Common_Class;
 
-class sign_model extends Common_Class
+
+class sign_model
 {
 
     /**
@@ -115,9 +115,8 @@ class sign_model extends Common_Class
         }
 
         $result['msg'] = $msg;
-        $this->page_header_code('json');
-        echo json_encode($result);
-        die;
+
+        cc__outputPage($result);
     }
 
     /**
@@ -192,7 +191,9 @@ class sign_model extends Common_Class
             if (Db::rowCount() == 0) {
                 $time = time();
                 $ip = cc__getClientIp();
-                if (empty($ip)) $ip = '127.0.0.1';
+                if (empty($ip)) {
+                    $ip = '127.0.0.1';
+                }
                 //新增用户准备
                 $data = [
                     'admin_name' => '?',
@@ -228,8 +229,6 @@ class sign_model extends Common_Class
         }
 
         $result['msg'] = $msg;
-        $this->page_header_code('json');
-        echo json_encode($result);
-        die;
+        cc__outputPage($result);
     }
 }

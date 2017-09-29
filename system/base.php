@@ -19,8 +19,7 @@ define('ROOT_DIR', $root_dir . DS);
 
 
 define('APP_PATH', ROOT_DIR . 'application' . DS);//网站配置文件路径
-require APP_PATH . 'language' . EXT; //加载常规语言包数据
-require APP_PATH . 'class.common' . EXT; //加载常规通用类
+require APP_PATH . 'lang' . EXT; //加载常规语言包数据
 
 
 //BOF 加载公共路径参数

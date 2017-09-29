@@ -1,15 +1,16 @@
 <?php
 namespace Index\Controller;
 
-use CommonClass\Common_Class;
 
-use Index\Model\index_model;
 use Index\M_Class\Index_class;
 use Index\Model\my_account_model;
 
 
-class my_account extends Common_Class
+class my_account
 {
+    /**
+     * index
+     */
     public function index() {
 
     }

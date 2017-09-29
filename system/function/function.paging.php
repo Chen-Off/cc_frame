@@ -15,7 +15,7 @@
  */
 function pagingBreadcrumbs($pagingData, $urlData = [])
 {
-    $pagesOpton = \cc\Config::CB('Paginator');
+    $pagesOpton = \cc\Config::getCB('Paginator');
     $pages_paging_items = $pagesOpton['paging_items'];
     $pages_list_limit = $pagesOpton['list_limit'];
     if (empty($urlData)) {
@@ -103,79 +103,5 @@ function pagingBreadcrumbs($pagingData, $urlData = [])
     //$html .= '</ul></div>';
 
 
-    return $html;
-}
-
-
-function pagingBreadcrumbs2($pagingData, $urlData = [])
-{
-    if (empty($urlData)) {
-        $urlData = ['modules' => URL_MODULES, 'model' => URL_MODEL, 'action' => URL_ACTION];
-    }
-    $html = '';
-    $now_paging = $pagingData['now_paging'];
-    $max_paging = $pagingData['max_paging'];
-    $url_p = '-' . $pagingData['params'];
-
-    $html .= '<ul class="pages_paging"><li>' . PHP_EOL;
-    //数据统计
-    $html .= '<div id="paging_total">' . $pagingData['count'] . '项 / 共' . $max_paging . '页</div>' . PHP_EOL;
-
-    $html .= '<div id="paging_items">';
-
-    //上一页
-    if ($now_paging == 1) {
-        $url = '';
-        $bg_class = 'paging_color_none';
-    } else {
-        $url = 'href="' . createUrl($urlData['modules'], $urlData['model'], $urlData['action'], ($now_paging - 1) . $url_p) . '"';
-        $bg_class = '';
-    }
-    $html .= '<a class="w_70 ' . $bg_class . '" ' . $url . '"><i class="icon-angle-left m_r_5"></i>上一页</a>';
-
-    //分页内容
-    $pages_paging_items_2 = floor($pages_paging_items / 2);
-    if ($now_paging == 1 || $now_paging < $pages_paging_items) {
-        $star_i = 1;
-        $surplus = array('prev' => false, 'next' => true);
-    } elseif ($now_paging >= $pages_paging_items && ($now_paging + $pages_paging_items_2) <= $max_paging) {
-        $star_i = $now_paging - $pages_paging_items_2;
-        $surplus = array('prev' => true, 'next' => true);
-    } else {
-        $star_i = $max_paging - $pages_paging_items + 1;
-        $surplus = array('prev' => true, 'next' => false);
-    }
-
-    $over_i = ($pagingData['max_paging'] == 0) ? 1 : $star_i + $pages_paging_items - 1;
-    //中间部分
-    if ($surplus['prev'] === true) $html .= '<a>...</a>';
-    for ($i = $star_i; $i <= $over_i; $i++) {
-        if ($now_paging == $i) {
-            $url = '';
-            $bg_class = 'paging_now';
-        } else {
-            $url = 'href="' . createUrl($urlData['modules'], $urlData['model'], $urlData['action'], $i . $url_p) . '"';
-            $bg_class = '';
-        }
-
-        $html .= '<a class="' . $bg_class . '" ' . $url . '>' . $i . '</a>';
-        if ($i == $max_paging) break;
-    }
-    if ($surplus['next'] === true) $html .= '<a>...</a>';
-
-
-    //下一页
-    if ($now_paging == $max_paging) {
-        $url = '';
-        $bg_class = 'paging_color_none';
-    } else {
-        $url = 'href="' . createUrl($urlData['modules'], $urlData['model'], $urlData['action'], ($now_paging + 1) . $url_p) . '"';
-        $bg_class = '';
-    }
-
-    $html .= '<a class="w_70 ' . $bg_class . '" ' . $url . '>下一页<i class="icon-angle-right m_l_5"></i></a>';
-
-    $html .= '</div>' . PHP_EOL;
-    $html .= '</div></li></ul>' . PHP_EOL;
     return $html;
 }

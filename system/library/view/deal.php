@@ -2,8 +2,10 @@
 namespace cc\View;
 
 use cc\Config;
+use cc\Lang;
 use cc\Msg;
 use cc\Oauth;
+use cc\Paginator;
 
 class deal
 {
@@ -40,7 +42,6 @@ class deal
         $nowPage = Oauth::$page;
         $nav = '';
 
-        //var_dump($commonAuth);die;
         //循环数据
         foreach ($commonAuth as $module) {
             //先获取主模块 MODULES
@@ -128,13 +129,13 @@ class deal
         $result = '<a class="icon-home"></a>';
 
         if (!empty(URL_MODULES))
-            $result .= '<span class="fa fa-angle-right"></span>' . '<a>' . $this->lang['module'] . '</a>';
+            $result .= '<span class="fa fa-angle-right"></span>' . '<a>' . $this->lang['modules'] . '</a>';
 
         if (!empty(URL_MODEL))
             $result .= '<span class="fa fa-angle-right"></span>' . '<a>' . $this->lang['model'] . '</a>';
 
         if (!empty(URL_ACTION))
-            $result .= '<span class="fa fa-angle-right"></span>' . '<a href="' . brtUrl('action') . '">' . $this->lang['action']['name'] . '</a>';
+            $result .= '<span class="fa fa-angle-right"></span>' . '<a href="' . brtUrl('action') . '">' . $this->lang['action'] . '</a>';
 
         if (!empty(URL_PARAMS))
             $result .= '<span class="fa fa-angle-right m_r_10"></span>' . URL_PARAMS;
@@ -150,12 +151,12 @@ class deal
      */
     public function deal__commonLang($content)
     {
-        $lang = $this->lang['common'];
+        $lang = $this->lang;
         preg_match_all('/{\$CommonLang->(.*)\(\'(.*)\'\)}/isU', $content, $match);
         if (!empty($match[1])) {
             foreach ($match[1] as $k => $fun) {
-                if (method_exists($lang, $fun) && isset($match[2][$k])) {
-                    $new_item = $lang->$fun($match[2][$k]);
+                if (isset($match[2][$k]) && cc__isset($lang, [$fun, $match[2][$k]])) {
+                    $new_item = $lang[$fun]($match[2][$k]);
                 } else {
                     $new_item = '';
                 }
@@ -175,16 +176,28 @@ class deal
      */
     public function deal__moduleLang($content)
     {
-        $lang = $this->lang['action'];
+        $lang = cc__isset($this->lang, [URL_MODULES, URL_MODEL], null);
         preg_match_all('/{\$ModuleLang\[\'(.*)\'\]}/isU', $content, $match);
-        if (!empty($match[1])) {
+        if (!empty($match[1]) && false !== $lang && !empty($lang)) {
             foreach ($match[1] as $k => $item) {
-                $new_item = isset($lang['action'][$item]) ? $lang['action'][$item] : '';
-
+                $new_item = isset($lang[$item]) ? $lang[$item] : '';
                 $old_item = $match[0][$k];
                 $content = str_replace($old_item, $new_item, $content);
             }
         }
+        return $content;
+    }
+
+    /**
+     * 替换分页数据
+     * deal__viewPaginator
+     * @param $content
+     * @return string
+     */
+    public function deal__viewPaginator($content) {
+        $paginator = Paginator::pageShow();
+        $content = str_replace('{$show->paginator}', $paginator, $content);
+        Paginator::__define();
         return $content;
     }
 
@@ -197,17 +210,15 @@ class deal
     public function deal__viewData($content)
     {
         $data = $this->data;
-        if (empty($data)) {
-            return $content;
-        }
         $this->data = [];
 
         preg_match_all('/{\$show(\:|->)(.*)}/isU', $content, $match);
 
+        
         if (!empty($match[2])) {
             $arr = $match[2];
             foreach ($arr as $k => $item) {
-                if(!isset($data[$item]) || is_array($data[$item])) {
+                if (!isset($data[$item]) || is_array($data[$item])) {
                     continue;
                 }
                 $new_item = $data[$item];
@@ -283,7 +294,7 @@ class deal
         $content = str_replace('URL_MODULES', URL_MODULES, $content);
 
         //加载主页URL
-        $content = str_replace('{$page:DomainUrl/}', Config::CB('domain_url'), $content);
+        $content = str_replace('{$page:DomainUrl/}', Config::getCB('domain_url'), $content);
         return $content;
     }
 
@@ -297,9 +308,9 @@ class deal
     public function deal_pageHead($content)
     {
         //加载META三大标签
-        $content = str_replace('{$page:MetaTitle/}', META_TITLE, $content);
-        $content = str_replace('{$page:MetaKeywords/}', META_KEYWORDS, $content);
-        $content = str_replace('{$page:MetaDescription/}', META_DESCRIPTION, $content);
+        $content = str_replace('{$page:MetaTitle/}', $this->lang['meta_title'], $content);
+        $content = str_replace('{$page:MetaKeywords/}', $this->lang['meta_keywords'], $content);
+        $content = str_replace('{$page:MetaDescription/}', $this->lang['meta_description'], $content);
 
         //加载ICO图标
         $icoHref = 'tpl/styles/img/favicon.ico';
@@ -357,11 +368,9 @@ class deal
      */
     public function deal__resultMsg($content)
     {
-        if (strpos($content, '{$page:alertResult/}') !== false) {
-            Msg::getMessage();
-            $alertResult = Msg::output();
-            $content = str_replace('{$page:alertResult/}', $alertResult, $content);
-        }
+        Msg::getMessage();
+        $alertResult = Msg::output();
+        $content = str_replace('{$page:alertResult/}', $alertResult, $content);
         return $content;
     }
 
@@ -382,7 +391,6 @@ class deal
         }
         $rank .= $user['u_power_name'];
         $content = str_replace('{$account:rank/}', $rank, $content);
-        //$content = preg_replace('/\{\$account\:(.*)\/\}$/i', '', $content);
 
         return $content;
     }

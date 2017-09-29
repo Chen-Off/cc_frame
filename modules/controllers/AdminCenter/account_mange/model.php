@@ -4,9 +4,9 @@ namespace AdminCenter\Model;
 use cc\Db;
 use cc\Msg;
 use ccCrypt\ccCrypt;
-use CommonClass\Common_Class;
 
-class account_mange_model extends Common_Class
+
+class account_mange_model
 {
     /**
      * get_all_groups 获取所有的分组

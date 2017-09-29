@@ -3,9 +3,9 @@ namespace AdminCenter\Model;
 
 use cc\Db;
 use cc\Msg;
-use CommonClass\Common_Class;
 
-class groups_mange_model extends Common_Class
+
+class groups_mange_model
 {
 
 

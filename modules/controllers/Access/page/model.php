@@ -1,9 +1,9 @@
 <?php
 namespace Access\Model;
 
-use CommonClass\Common_Class;
 
-class page_model extends Common_Class
+
+class page_model
 {
     public function page_404() {
 

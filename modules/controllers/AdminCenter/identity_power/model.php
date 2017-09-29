@@ -4,9 +4,9 @@ namespace AdminCenter\Model;
 use cc\Db;
 use cc\Msg;
 use cc\View;
-use CommonClass\Common_Class;
 
-class identity_power_model extends Common_Class
+
+class identity_power_model
 {
     private $mangerPowerFunction = 19;//管理员管理项目
 
@@ -507,8 +507,7 @@ class identity_power_model extends Common_Class
 
     private function js_json_exit($array)
     {
-        $this->page_header_code('json');
-        die(json_encode($array, JSON_UNESCAPED_UNICODE));
+        cc__outputPage($array);
     }
 
     /**

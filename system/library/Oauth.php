@@ -67,7 +67,7 @@ class Oauth
      */
     static function OauthPage()
     {
-        if (true !== Config::CB('oauth', 'view_page') || URL_MODULES == 'Access') {
+        if (true !== Config::getCB('oauth', 'view_page') || URL_MODULES == 'Access') {
             return true;
         }
 
@@ -146,7 +146,7 @@ class Oauth
      */
     static function OauthSign()
     {
-        if (true !== Config::CB('oauth','account') || URL_MODULES == 'Access') {
+        if (true !== Config::getCB('oauth','account') || URL_MODULES == 'Access') {
             return true;
         }
 
@@ -211,7 +211,6 @@ class Oauth
         } else {
             $msg = '请先登录';
         }
-        //echo $msg;die;
 
         if (!empty($msg)) {
             //没有登录 跳转到登录页面
@@ -365,20 +364,20 @@ class Oauth
      */
     static function OauthPower()
     {
-        if (true !== Config::CB('oauth', 'power') || URL_MODULES == 'Access') {
+        if (true !== Config::getCB('oauth', 'power') || URL_MODULES == 'Access') {
             return true;
         }
 
         self::getUserInfo();
-        self::$power = Config::CE('admin_power');
+        self::$power = Config::getCE('admin_power');
         if(false === self::$power) {
             DeBug::msgExit('[Config Extend Error]: 错误的权限设定{admin_power}');
         }
-        self::$powerName = Config::CE('admin_power_name');
+        self::$powerName = Config::getCE('admin_power_name');
         if(false === self::$powerName) {
             DeBug::msgExit('[Config Extend Error]: 错误的权限名称设定{admin_power_name}');
         }
-        self::$powerShop = Config::CE('admin_power_shop');
+        self::$powerShop = Config::getCE('admin_power_shop');
         if(false === self::$powerShop) {
             DeBug::msgExit('[Config Extend Error]: 错误的权限设定{admin_power_shop}');
         }

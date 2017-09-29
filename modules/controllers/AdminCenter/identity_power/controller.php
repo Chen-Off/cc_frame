@@ -4,9 +4,9 @@ namespace AdminCenter\Controller;
 use AdminCenter\Model\identity_power_model;
 use cc\Db;
 use cc\View;
-use CommonClass\Common_Class;
 
-class identity_power extends Common_Class
+
+class identity_power
 {
     public $accountStatus = [0 => '停用', 1 => '使用'];
 
@@ -65,7 +65,9 @@ class identity_power extends Common_Class
         }
         //获取所有功能数据并转化成特殊数组
         $f_json = $MODEL->get_function_array();
-        $this->viewData['f_json'] = $f_json;
+        View::push('f_json',$f_json);
+
+
     }
 
     //独立授权功能
@@ -83,7 +85,7 @@ class identity_power extends Common_Class
         foreach ($adminArr as $v) {
             $admin_list .= '<option value="' . $v['admin_id'] . '">' . $v['admin_name'] . '【' . $v['group_name'] . '】 - ' . $v['admin_level_name'] . '</option>';
         }
-        $this->viewData['admin_list'] = $admin_list;
+        View::push('admin_list',$admin_list);
 
         //获取所有的可用的特别授权
         $authArr = $MODEL->get_auth_content_list();
@@ -91,7 +93,8 @@ class identity_power extends Common_Class
         foreach ($authArr as $v) {
             $auth_list .= '<option value="' . $v['auth_c_id'] . '">' . $v['auth_c_name'] . '</option>';
         }
-        $this->viewData['auth_list'] = $auth_list;
+        View::push('auth_list',$auth_list);
+
 
         //获取已经授权的
         $AIA_arr = $MODEL->get_auth_in_admin();
@@ -99,7 +102,8 @@ class identity_power extends Common_Class
         foreach ($AIA_arr as $v) {
             $AIA_list .= '<label>' . $v['admin_name'] . ' - ' . $v['auth_c_name'] . '/' . cc__getDate('TIME', $v['auth_time']) . '</label>';
         }
-        $this->viewData['auth_in_admin_list'] = $AIA_list;
+        View::push('auth_in_admin_list',$AIA_list);
+
 
 
     }

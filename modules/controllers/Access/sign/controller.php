@@ -3,10 +3,10 @@ namespace Access\Controller;
 
 use Access\Model\sign_model;
 use cc\Db;
-use CommonClass\Common_Class;
+
 use vCode\vCode;
 
-class sign extends Common_Class
+class sign
 {
     public function index()
     {

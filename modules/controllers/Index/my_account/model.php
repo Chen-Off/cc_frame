@@ -3,10 +3,10 @@ namespace Index\Model;
 use cc\Db;
 use cc\Oauth;
 use ccCrypt\ccCrypt;
-use CommonClass\Common_Class;
+
 use Index\M_Class\Index_class;
 
-class my_account_model extends Common_Class
+class my_account_model
 {
 
     /**

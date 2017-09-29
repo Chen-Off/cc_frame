@@ -1,9 +1,9 @@
 <?php
 namespace Access\Controller;
 
-use CommonClass\Common_Class;
 
-class page extends Common_Class
+
+class page
 {
     public function index()
     {

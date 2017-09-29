@@ -81,7 +81,7 @@ class Cache
         if (is_null(self::$handler)) {
             // 自动初始化缓存
             if (empty($options)) {
-                $options = Config::CB('Cache');
+                $options = Config::getCB('Cache');
                 if (false === $options) {
                     $options = [];
                 }

@@ -5,11 +5,12 @@ namespace system;
 //启动环境配置
 use cc\Config;
 use cc\Db;
+use cc\Lang;
 use cc\Oauth;
 use cc\View;
 
 require 'base.php';
-require APP_PATH.'config.define'.EXT;//公共常量
+require APP_PATH . 'config.define' . EXT;//公共常量
 
 
 //MVC 实例化
@@ -68,9 +69,9 @@ class App
      */
     static private function loaderSetting()
     {
-        $config = Config::CB();
+        $config = Config::getCB();
         //错误屏蔽
-        if(true === $config['error_show']) {
+        if (true === $config['error_show']) {
             error_reporting(E_ALL);
         } else {
             error_reporting(0);
@@ -84,9 +85,9 @@ class App
         ini_set('gd.jpeg_ignore_warning', $config['gd_warning']);//图片错误屏蔽
 
         set_time_limit($config['time_limit']);//超时
-        
-        define('URL_TYPE', Config::CB('url_type'));
-        define('DOMAIN_URL', Config::CB('domain_url'));
+
+        define('URL_TYPE', Config::getCB('url_type'));
+        define('DOMAIN_URL', Config::getCB('domain_url'));
     }
 
     /**
@@ -96,9 +97,9 @@ class App
     {
         //优先载入 CONFIG 配置文件类并加载默认配置参数
         cc__requireFile(LIBRARY_PATH . 'Config' . EXT);
-        Config::C();
+        Config::getC();
 
-        $loadLibrary = Config::CB('library');
+        $loadLibrary = Config::getCB('library');
         if (false === $loadLibrary) {
             self::systemExit('[System Error]: 基本配置中加载公共图书馆类的配置错误 【config.base】');
         }
@@ -176,7 +177,7 @@ class App
     private static function loaderFunction()
     {
         //先加载通用的自定义函数
-        $ccFunction = CC_FUNCTION_PATH . '/function.cc' . EXT;
+        $ccFunction = CC_FUNCTION_PATH . DS . 'function.cc' . EXT;
         if (!is_file($ccFunction)) {
             $msg = '[System Error]: {' . $ccFunction . '}自定义函数文件不存在';
             self::systemExit($msg);
@@ -236,7 +237,7 @@ class App
 class startApp
 {
     public static $controller, $model, $viewContent, $viewData, $pageContent;
-    public static $lang;
+    //public static $lang;
     //访问页html文件
     public static $tplPageFile = URL_MODULES == 'Access' ? URL_MODEL . '.' . URL_ACTION . '.html' : 'app.html';
     public static $smartyArr = ['header', 'index', 'aside', 'page_footer', 'settings', 'app_footer'];
@@ -260,62 +261,23 @@ class startApp
 
 
         //加载视图文件内容 + 模版文件内容
-        View::lang_data(self::$lang, self::$tplPageFile);
+        View::lang_data(self::$tplPageFile);
         View::display();
     }
 
     /**
-     * callLang
      * 加载语言包模块
+     * callLang
      */
     public static function callLang()
     {
-        $lang = ['action' => [], 'common' => ''];
-        $lang['action']['name'] = '默认名称';
-        $lang['title'] = '默认标题';
-        $lang['name'] = '默认名称';
-        $lang['module'] = URL_MODULES;
-        $lang['model'] = URL_MODEL;
+        //设定语言
+        Lang::range(Config::getC('config.base', 'lang'));
 
-        $langPath = MODULES_PATH . '/language' . EXT;
-        if (false !== cc__requireFile($langPath)) {
-            $langClass = URL_MODULES . '\\Language\\' . URL_MODULES . '_language';
-            if (class_exists($langClass)) {
-                $langObj = new $langClass();
-                $lang['common'] = $langObj;
-
-                $model = URL_MODEL;
-                $action = empty(URL_ACTION) ? 'index' : URL_ACTION;
-                if (method_exists($langObj, $model)) {
-                    $langObj->$model($action);
-                    if (isset($langObj->Model[$action])) {
-                        $langArr = $langObj->Model[$action];
-                        $lang['name'] = $langObj->Model['index']['name'];
-                        $lang['title'] = $langObj->Module['name'] . ' | ' . $langObj->Model['index']['name'];
-                        if (!empty($action) && $action != 'index') {
-                            $lang['title'] .= ' - ' . $langArr['name'];
-                            $lang['name'] = $langArr['name'];
-                        }
-
-                        $lang['action'] = $langArr;
-                    }
-                    $lang['module'] = $langObj->Module['name'];
-                    $lang['model'] = $langObj->Model['index']['name'];
-                }
-                if (isset($lang['common']->Model)) unset($lang['common']->Model);
-                if (isset($lang['common']->Module)) unset($lang['common']->Module);
-
-                self::$lang = $lang;
-            } else {
-                $msg = '[App Error]:  项目语言包:{' . $langClass . '} 类名称未发现!';
-                self::appExit($msg);
-            }
-        } else {
-            $msg = '[App Error]:  项目语言包:{' . $langPath . '} 文件未发现!';
-            self::appExit($msg);
-        }
-
+        //载入语言包
+        Lang::loader();
     }
+
 
     /**
      * callMeta
@@ -323,14 +285,17 @@ class startApp
      */
     public static function callMeta()
     {
-        if (isset(self::$lang['title'])) {
-            $metaTitle = self::$lang['title'];
-        } else {
-            $metaTitle = self::$lang['common']->common('title');
+        $lang = Lang::get();
+        if(false !== $lang) {
+            $title = $lang['modules'] . ' | ' . $lang['model'] . ' - ' . $lang['action'];
+            $keywords = $lang['action'] . ',' . $lang['model'] . ',' . $lang['modules'];
+            $description = $lang['action'];
+
+            //设定三大标签
+            Lang::set('meta_title', $title);
+            Lang::set('meta_keywords', $keywords);
+            Lang::set('meta_description', $description);
         }
-        define('META_TITLE', $metaTitle);
-        define('META_KEYWORDS', '');
-        define('META_DESCRIPTION', '');
     }
 
     /**
@@ -339,7 +304,7 @@ class startApp
      */
     public static function callClass()
     {
-        $appClass = MODULES_PATH . '/class' . EXT;
+        $appClass = MODULES_PATH . DS . 'class' . EXT;
         cc__requireFile($appClass);
     }
 
@@ -361,16 +326,10 @@ class startApp
         cc__requireFile(MODULES_CONTROLLER_FILE);
         $controllerClass = URL_MODULES . '\\Controller\\' . URL_MODEL;
 
-        if (class_exists($controllerClass)) {
-
+        if (class_exists($controllerClass, false)) {
             $runObj = new $controllerClass(); //实例化项目控制器
             $action = empty(URL_ACTION) ? "index" : URL_ACTION; //设置方法名称
             if (method_exists($runObj, $action)) {
-
-
-                //传递语言包
-                $runObj->LangC = self::$lang['common'];
-                $runObj->LangA = self::$lang['action'];
 
                 //加载项目通用类
                 self::callClass();
@@ -379,12 +338,6 @@ class startApp
                 self::callModel();
 
                 $runObj->$action(); //运行方法
-
-                if (isset($runObj->viewData)) {
-                    //有返回结果，赋值
-                    //self::$viewData = $runObj->viewData;
-                    View::pushBatch($runObj->viewData); //批量追加数据
-                }
                 unset($runObj);
             } else {
                 $msg = '[App Error]:  项目控制器:{' . $controllerClass . '} 下 {' . $action . '}方法未发现!';
@@ -428,16 +381,16 @@ class startApp
         }
 
         //检测TPL文件是否存在
-        if (self::$tplPageFile == 'app.html' && !is_file(TEMPLATES_PATH . '/page/' . self::$tplPageFile)) {
+        if (self::$tplPageFile == 'app.html' && !is_file(TEMPLATES_PATH . DS . 'page' . DS . self::$tplPageFile)) {
             $msg = '[Template Error]: {' . self::$tplPageFile . '}所访问的页面HTML文件不存在!!!';
             self::appExit($msg);
         }
 
         //smarty 主模版HTML文件是否存在
         foreach (self::$smartyArr as $tmpFile) {
-            $path = TEMPLATES_PATH . '/smarty/' . $tmpFile . '.html';
+            $path = TEMPLATES_PATH . DS . 'smarty' . DS . $tmpFile . '.html';
             if (!is_file($path)) {
-                $msg = '[Template Error]: {smarty/' . $tmpFile . '}页面文件不存在!';
+                $msg = '[Template Error]: {smarty' . DS . $tmpFile . '}页面文件不存在!';
                 self::appExit($msg);
             }
         }

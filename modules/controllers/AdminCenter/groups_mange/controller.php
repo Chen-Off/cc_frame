@@ -6,11 +6,12 @@ namespace AdminCenter\Controller;
 
 use AdminCenter\Model\groups_mange_model;
 use cc\Db;
-use CommonClass\Common_Class;
+use cc\View;
 
 
 
-class groups_mange extends Common_Class
+
+class groups_mange
 {
 
     public $groupStatus = [0 => '停用', 1 => '使用'];
@@ -43,20 +44,21 @@ class groups_mange extends Common_Class
         $select = 't1.*, t2.admin_name';
         $data = Db::table('admin_groups t1')->join($join,'LEFT')->where('t1.group_id = ' . URL_PARAMS)->find($select);
 
-        $this->viewData['c_time'] = cc__getDate('day', $data['create_time']);
-        $this->viewData['name'] = $data['group_name'];
-        $this->viewData['leader'] = empty($data['admin_name']) ? '未设置' : $data['admin_name'];
+        $viewData = [];
+        $viewData['c_time'] = cc__getDate('day', $data['create_time']);
+        $viewData['name'] = $data['group_name'];
+        $viewData['leader'] = empty($data['admin_name']) ? '未设置' : $data['admin_name'];
 
 
-        $this->viewData['select_leader'] = '';
-        $this->viewData['team'] = '';
+        $viewData['select_leader'] = '';
+        $viewData['team'] = '';
         $teams = $MODEL->get_all_team(URL_PARAMS);
         if (!empty($teams)) {
             foreach ($teams as $v) {
                 //获取所有的组员
                 if ($v['admin_id'] != $data['leader_id']) {
                     $stem_name_class = ($v['status'] == 0) ? 'text-dlt' : '';
-                    $this->viewData['team'] .= '<span class="' . $stem_name_class . '">' . $v['admin_name'] . '</span>
+                    $viewData['team'] .= '<span class="' . $stem_name_class . '">' . $v['admin_name'] . '</span>
                 <span class="p_l_10 p_r_10">/</span>';
                 }
 
@@ -70,12 +72,12 @@ class groups_mange extends Common_Class
                         $selectClass = '';
 
                     }
-                    $this->viewData['select_leader'] .= '<option class="' . $selectClass . '" value="' . $v['admin_id'] . '" ' . $selected . '>' . $v['admin_name'] . '</option>';
+                    $viewData['select_leader'] .= '<option class="' . $selectClass . '" value="' . $v['admin_id'] . '" ' . $selected . '>' . $v['admin_name'] . '</option>';
                 }
 
             }
         } else {
-            $this->viewData['team'] = '还未分配组员';
+            $viewData['team'] = '还未分配组员';
         }
 
 
@@ -86,21 +88,19 @@ class groups_mange extends Common_Class
             $selected = $k == $data['verify_power'] ? 'selected="selected"' : '';
             $verify_power .= '<option value="'.$k.'" '.$selected.'>'.$vp.'</option>';
         }
-        $this->viewData['verify_power'] = $verify_power;
+        $viewData['verify_power'] = $verify_power;
         
 
-
-        //var_dump($data);die;
-
-        $this->viewData['select_status'] = '';
+        $viewData['select_status'] = '';
         foreach ($this->groupStatus as $k => $s) {
             $selected = ($k == $data['status'] ? 'selected="selected"' : '');
-            $this->viewData['select_status'] .= '<option value="' . $k . '" ' . $selected . '>' . $s . '</option>';
+            $viewData['select_status'] .= '<option value="' . $k . '" ' . $selected . '>' . $s . '</option>';
         }
 
         //获取所有分组
 
-        $this->viewData['mange_post_url'] = createUrl();
+        $viewData['mange_post_url'] = createUrl();
+        View::pushBatch($viewData);
     }
 
 
@@ -152,10 +152,7 @@ class groups_mange extends Common_Class
         }
 
         $json = ['aaData' => $json];
-        $this->page_header_code('json');
-        echo json_encode($json);
-        die;
-
+        cc__outputPage($json);
     }
 
 }

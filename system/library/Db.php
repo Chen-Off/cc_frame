@@ -88,7 +88,7 @@ class Db
     public static function oauthOptions($options = [])
     {
         if (empty($options)) {
-            $options = Config::DB();
+            $options = Config::getDB();
         }
         switch (true) {
             case !isset($options['db_host']) || empty($options['db_host']):
