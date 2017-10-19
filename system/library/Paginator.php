@@ -92,7 +92,7 @@ class Paginator
         $obj->pageNow = self::$pageNow;
         $obj->pageUrl = self::$pageUrl;
         $obj->itemName = self::$itemName;
-        $obj->maxPage = ceil(self::$total / self::$listRows);
+        $obj->maxPage = (int)ceil(self::$total / self::$listRows);
         return $obj;
     }
 
@@ -192,7 +192,7 @@ class Paginator
     public static function setPageNow($page)
     {
         if(!empty($page)) {
-            self::$pageNow = $page;
+            self::$pageNow = is_numeric($page) ? $page : 1;
         }
     }
 

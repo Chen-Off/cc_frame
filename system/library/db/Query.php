@@ -595,11 +595,31 @@ class Query
                 'data' => trim($where),
             ];
         } else {
-            $where = array_map('trim', $where);
-            foreach ($where as $str) {
+            //检测是否是一维数组
+            foreach ($where as $val) {
+                if(empty($val)) {
+                    continue;
+                }
+
+                if(is_array($val)) {
+                    if(count($val) != 3) {
+                        $msg = '[DB ERROR]: 错误的WHERE 连贯语法【'.implode(' ',$val).'】';
+                        $this->connection->db_error($msg);
+                    }
+
+                    $val = array_map('trim', $val);
+                    $data = [
+                        'field' => $val[0], //查询字段
+                        'op' => strtoupper($val[1]),   //查询表达式
+                        'condition' => $val[2],   //查询条件
+                    ];
+                } else {
+                    $data = trim($val);
+                }
+
                 $this->options['where'][] = [
                     'type' => 'where',
-                    'data' => trim($str),
+                    'data' => $data
                 ];
             }
         }
@@ -620,15 +640,35 @@ class Query
 
         if (is_string($whereOr)) {
             $this->options['where'][] = [
-                'type' => 'where',
+                'type' => 'or',
                 'data' => trim($whereOr),
             ];
         } else {
-            $whereOr = array_map('trim', $whereOr);
-            foreach ($whereOr as $str) {
+
+            foreach ($whereOr as $val) {
+                if(empty($val)) {
+                    continue;
+                }
+
+                if(is_array($val)) {
+                    if(count($val) != 3) {
+                        $msg = '[DB ERROR]: 错误的WHERE OR 连贯语法【'.implode(' ',$val).'】';
+                        $this->connection->db_error($msg);
+                    }
+
+                    $val = array_map('trim', $val);
+                    $data = [
+                        'field' => $val[0], //查询字段
+                        'op' => strtoupper($val[1]),   //查询表达式
+                        'condition' => $val[2],   //查询条件
+                    ];
+                } else {
+                    $data = trim($val);
+                }
+
                 $this->options['where'][] = [
                     'type' => 'or',
-                    'data' => trim($str),
+                    'data' => $data
                 ];
             }
         }

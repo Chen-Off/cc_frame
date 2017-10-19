@@ -64,8 +64,8 @@ class Analyze
     // SQL表达式
     protected $selectSql = 'SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
     protected $insertSql = '%INSERT% INTO %TABLE% (%FIELD%) VALUES (%DATA%) %COMMENT%';
-    protected $updateSql = 'UPDATE %TABLE% SET %SET% %JOIN% %WHERE% %ORDER%%LIMIT% %LOCK%%COMMENT%';
-    protected $deleteSql = 'DELETE FROM %TABLE% %USING% %JOIN% %WHERE% %ORDER%%LIMIT% %LOCK%%COMMENT%';
+    protected $updateSql = 'UPDATE %TABLE% SET %SET% %JOIN% %WHERE% %ORDER% %LIMIT% %COMMENT%';
+    protected $deleteSql = 'DELETE FROM %TABLE% %USING% %JOIN% %WHERE% %ORDER% %LIMIT% %COMMENT%';
 
     /**
      * 架构函数
@@ -274,10 +274,13 @@ class Analyze
      * parseFields
      * @param string|array $fields [description]   要分析的字段
      * @param string $exp [description]   切割和合并的参数
-     * @return bool
+     * @return string
      */
     public function parseFields($fields, $exp = ',')
     {
+        if(empty($fields)) {
+            return $fields;
+        }
         if (is_string($fields)) {
             $fields = explode($exp, $fields);
         }
@@ -380,25 +383,35 @@ class Analyze
 
         //优先处理 WHERE 条件
         foreach ($where as $valArr) {
-            $val = $valArr['data'];
-            $valData = [];
-            //根据条件表达式要素切割条件
-            foreach ($expArr as $exp) {
-                if (false !== stripos($val, $exp)) {
-                    $valData = preg_split('/' . $exp . '/i', $val);
-                    $valData = array_map('trim', $valData);
-                    $valData = [
-                        'field' => $valData[0], //查询字段
-                        'op' => $exp,   //查询表达式
-                        'condition' => $valData[1],   //查询条件
-                    ];
+            if(!is_array($valArr['data'])) {
+                $val = $valArr['data'];
+                $valData = [];
+                //根据条件表达式要素切割条件
+                foreach ($expArr as $exp) {
+                    if (false !== stripos($val, $exp)) {
+                        $valData = preg_split('/' . $exp . '/i', $val);
+                        $valData = array_map('trim', $valData);
+                        $valData = [
+                            'field' => $valData[0], //查询字段
+                            'op' => $exp,   //查询表达式
+                            'condition' => $valData[1],   //查询条件
+                        ];
+                        break;
+                    }
+                }
+            } else {
+                $valData = $valArr['data'];
+                //检测是否存在表达式
+                if(!in_array($valData['op'], $expArr)) {
+                    $msg = '[DB ERROR]:错误的WHERE条件 表达式 -【' . $valData['op'] . '】';
                     break;
                 }
+                $val = implode(' ', $valData);
             }
 
             //检测是否存在表达式要素
             if (empty($valData)) {
-                $msg = '[DB ERROR]:错误的WHERE条件 表达式 -【' . $val . '】';
+                $msg = '[DB ERROR]:错误的WHERE条件 -【' . $val . '】';
                 break;
             }
 
@@ -656,7 +669,7 @@ class Analyze
         }
 
         $sql = str_replace(
-            ['%TABLE%', '%SET%', '%JOIN%', '%WHERE%', '%ORDER%', '%LIMIT%', '%LOCK%', '%COMMENT%'],
+            ['%TABLE%', '%SET%', '%JOIN%', '%WHERE%', '%ORDER%', '%LIMIT%', '%COMMENT%'],
             [
                 $this->parseTable($options['table']),
                 implode(',', $set),
@@ -664,7 +677,6 @@ class Analyze
                 $this->parseWhere($options['where']),
                 $this->parseOrder($options['order']),
                 $this->parseLimit($options['limit']),
-                $this->parseLock($options['lock']),
                 $this->parseComment($options['comment']),
             ], $this->updateSql);
 
@@ -788,7 +800,7 @@ class Analyze
         //str sum avg
         switch ($type) {
             case 'str':
-                $realStr = '"' . $array[1] . '"';
+                $realStr = $array[1];
                 break;
 
             //计算差
@@ -911,7 +923,7 @@ class Analyze
     public function delete($options)
     {
         $sql = str_replace(
-            ['%TABLE%', '%USING%', '%JOIN%', '%WHERE%', '%ORDER%', '%LIMIT%', '%LOCK%', '%COMMENT%'],
+            ['%TABLE%', '%USING%', '%JOIN%', '%WHERE%', '%ORDER%', '%LIMIT%',  '%COMMENT%'],
             [
                 $this->parseTable($options['table']),
                 !empty($options['using']) ? ' USING ' . $this->parseTable($options['using']) . ' ' : '',
@@ -919,7 +931,6 @@ class Analyze
                 $this->parseWhere($options['where']),
                 $this->parseOrder($options['order']),
                 $this->parseLimit($options['limit']),
-                $this->parseLock($options['lock']),
                 $this->parseComment($options['comment']),
             ], $this->deleteSql);
 

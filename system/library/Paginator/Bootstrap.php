@@ -154,13 +154,13 @@ class Bootstrap
             $side = floor($pageRows / 2);
             $startPage = $pageNow - $side;
             $overPage = $pageNow + $side;
-
-            if($overPage > $maxPage) {
-                $overPage = $maxPage;
-            }
         } else {
             $startPage = 1;
             $overPage = $pageRows;
+        }
+
+        if($overPage > $maxPage) {
+            $overPage = $maxPage;
         }
 
         for ($i = $startPage; $i <= $overPage; $i++) {
