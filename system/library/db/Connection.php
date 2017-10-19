@@ -19,6 +19,12 @@ class Connection
     /** @var PDOStatement PDO操作实例 */
     protected $PDOStatement;
 
+    /**
+     * 数据库操作分析实例
+     * @var Analyze
+     */
+    protected $analyze;
+
     /** @var string 当前SQL指令 */
     // 返回或者影响记录数
     protected $numRows = 0;
@@ -54,6 +60,8 @@ class Connection
         'port' => '3306',
         'charset' => 'utf8',
         'db_error' => false,
+
+        'analyze' => 'mysql',
     ];
 
     // PDO连接参数
@@ -207,6 +215,7 @@ class Connection
         $this->linkID = $this->connect();
     }
 
+
     /**
      * 连接数据库方法
      * @access public
@@ -226,11 +235,11 @@ class Connection
             try {
                 $this->links[$linkNum] = new PDO('mysql:host=' . $config['db_host'] . ';dbname=' . $config['db_name'], $config['db_user'], $config['db_password'], $this->params);
             } catch (PDOException $e) {
-                $this->message = 'Connection failed: ' . $e->getMessage();
+                $this->message = '[DB ERROR]：数据库链接失败 - ' . $e->getMessage();
                 $this->db_error();
             }
             $this->links[$linkNum]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->links[$linkNum]->exec('set names utf8');
+            $this->links[$linkNum]->exec('set names '.$config['charset']);
             //$this->links[$linkNum]->beginTransaction();
         }
 
@@ -289,8 +298,9 @@ class Connection
 
             return $this->getResult($fetch);
         } catch (PDOException $e) {
-            $this->message = $e->getMessage() . '{' . $this->queryStr . '}';
+            $this->message = '[DB ERROR]：'.$e->getMessage() . '{' . $this->queryStr . '}';
             $this->db_error();
+            return false;
 
             //throw new PDOException($e, $this->config, $this->queryStr);
         }
@@ -328,7 +338,7 @@ class Connection
                 return $this->numRows;
             }
         } catch (PDOException $e) {
-            $this->message = $e->getMessage() . '{' . $this->queryStr . '}';
+            $this->message = '[DB ERROR]：'.$e->getMessage() . '{' . $this->queryStr . '}';
             $this->db_error();
 
             //throw new PDOException($e, $this->config, $this->queryStr);
@@ -486,7 +496,7 @@ class Connection
 
     /**
      * getResult 获得数据集
-     * @param $fetch
+     * @param $fetch    [description]   是否返回多维数组
      * @return array
      */
     function getResult($fetch = false)
@@ -587,13 +597,17 @@ class Connection
                 }
 
                 if (!$result) {
-                    $this->message = '所绑定的参数是未成功绑定{' . PHP_EOL . $this->queryStr . PHP_EOL . '}';
+                    $this->message = '[DB ERROR]：所绑定的参数是未成功绑定{' . PHP_EOL . $this->queryStr . PHP_EOL . '}';
                     $this->db_error();
                 }
             }
         }
     }
 
+    /**
+     * 错误退出
+     * @param null $message
+     */
     function db_error($message = null)
     {
         if ($this->config['db_error'] === true) {
@@ -604,6 +618,17 @@ class Connection
             } else {
                 echo "\n" . '<br/>' . "\n" . $this->getError();
             }
+
+            $array =debug_backtrace();
+            unset($array[0]);
+            $html = '';
+            foreach($array as $row)
+            {
+                $line = isset($row['line']) ? $row['line'] : '';
+                $file = isset($row['file']) ? $row['file'] : '';
+                $html .= "\n" . '<br/>' . "\n".$file.':'.$line.'行,调用方法:'.$row['function'];
+            }
+            echo $html;
         }
         die;
     }

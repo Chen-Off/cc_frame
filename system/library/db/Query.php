@@ -1,4 +1,5 @@
 <?php
+
 namespace cc\db;
 
 use cc\Db;
@@ -16,12 +17,20 @@ use PDOException;
 class Query
 {
 
-    protected $preKeys = array(), $preValues = array();
-
     /** @var string 错误信息 */
     protected $message;
 
-    /** @var Connection　数据库Connection对象实例 */
+
+    /**
+     * 数据库分析实例
+     * @var Analyze
+     */
+    protected $analyze;
+
+    /**
+     * @var \cc\db\Connection
+     * 数据库Connection对象实例
+     */
     protected $connection;
 
     // 当前模型类名称
@@ -33,18 +42,10 @@ class Query
     // 当前数据表前缀
     protected $prefix = '';
     // 查询参数
-    protected $options = [
-        'table' => '',
-        'join' => '',
-        'where' => '',
-        'order' => '',
-        'limit' => '',
-        'group' => '',
-        'lock' => false
-    ];
+    protected $options = [];
     // 参数绑定
     protected $bind = [];
-    protected $where, $whereOr;
+
     // 数据表信息
     protected static $info = [];
 
@@ -52,7 +53,7 @@ class Query
      * 架构函数
      * Query constructor.
      * @access public
-     * @param $connection [数据库对象实例]
+     * @param $connection [description] [数据库对象实例]
      */
     public function __construct($connection = null)
     {
@@ -60,14 +61,17 @@ class Query
 
         //表前缀
         $this->prefix = $this->connection->getConfig('db_prefix');
+        //表分析实例
+        $this->analyze = $this->connection->getConfig('analyze');
         if (!empty($this->prefix)) $this->prefix .= '_';
+        $this->free();
     }
 
 
     /**
      * __set 外部赋值的对象方式
-     * @param $file
-     * @param $value
+     * @param $file     [description]   字段
+     * @param $value    [description]   字段内容
      */
     function __set($file, $value)
     {
@@ -111,7 +115,6 @@ class Query
      * 批处理的指令都认为是execute操作
      * @access public
      * @param array $sql SQL批处理指令
-     * @return boolean
      */
     public function batchQuery($sql = [])
     {
@@ -132,18 +135,16 @@ class Query
 
     /**
      * data    赋值的对象方式
-     * @param string|array $file [description]
-     * @param $value [description] 'chenchao'
+     * @param string|array $file [description]  设置字段参数
+     * @param $value [description] 设置字段值    'chenchao'
      * @return $this
      */
     function data($file, $value = null)
     {
         if (is_array($file)) {
-            $this->preKeys = array_merge($this->preKeys, array_keys($file));
-            $this->preValues = array_merge($this->preValues, array_values($file));
+            $this->options['data'] = array_merge($this->options['data'], $file);
         } else {
-            $this->preKeys[] = $file;
-            $this->preValues[] = $value;
+            $this->options['data'][$file] = $value;
         }
         return $this;
 
@@ -151,7 +152,7 @@ class Query
 
     /**
      * connect 切换当前的数据库连接
-     * @param $option
+     * @param $option   [description]   数据库连接配置
      * @return $this
      */
     function connect($option)
@@ -159,6 +160,26 @@ class Query
         $this->connection = Db::connect($option);
         return $this;
     }
+
+    /**
+     * 获取当前Analyze实例对象
+     * @access protected
+     * @return Analyze
+     */
+    protected function Analyze()
+    {
+        static $analyze = [];
+        $driver = $this->analyze;
+
+        if (!isset($analyze[$driver])) {
+            $class = false !== strpos($driver, '\\') ? $driver : '\\cc\\db\\Analyze';
+            $analyze[$driver] = new $class($this->connection);
+        }
+        // 设置当前查询对象
+        $analyze[$driver]->setQuery($this);
+        return $analyze[$driver];
+    }
+
 
     /**
      * 获取当前的数据库Connection对象
@@ -174,25 +195,42 @@ class Query
     /** 初始化方式 */
     function free()
     {
-        $this->preKeys = array();
-        $this->preValues = array();
         $this->bind = [];
         $this->options = [
+
             'table' => '',
-            'join' => '',
-            'where' => '',
-            'order' => '',
+            'fields' => [],
+            'join' => [],
+            'where' => [],
+            'having' => '',
+            'order' => [],
             'limit' => '',
             'group' => '',
+            'comment' => '',
+            'data' => [],
+            'union' => [],
+            'force' => [],
+            'using' => '',
+            'fetch_sql' => false,
+            'lock' => false,
+            'distinct' => false,
         ];
-        $this->where = '';
-        $this->whereOr = '';
+
+        $this->Analyze()->free();
     }
 
 
+    /**
+     * 设置操作主表
+     * @param $table       [description]    表名 表别名
+     * @return $this
+     */
     function table($table)
     {
-        $this->options['table'] = $this->prefix . $table;
+        //加入缓存
+        $this->Analyze()->parseTable($table, true);
+        $this->options['table'] = $table;
+        //$this->options['table'] = $this->Analyze()->parseTable($table, true);
         return $this;
     }
 
@@ -204,191 +242,317 @@ class Query
      */
     function lock($lock = false)
     {
-        //$this->options['lock']   = $lock;
-        $this->options['lock'] = $lock ? ' FOR UPDATE ' : '';
+        $this->options['lock'] = $lock;
+        return $this;
+    }
+
+    /**
+     * USING支持 用于多表删除
+     * @access public
+     * @param mixed $using  [description]
+     * @return $this
+     */
+    public function using($using)
+    {
+        $this->options['using'] = $using;
+        return $this;
+    }
+
+    /**
+     * 去重
+     * distinct
+     * @param bool $distinct    [description]   是否强制去重
+     * @return $this
+     */
+    function distinct($distinct = false)
+    {
+        $this->options['distinct'] = $distinct;
+        return $this;
+    }
+
+    /**
+     * 指定查询字段 支持字段排除和指定数据表
+     * @access public
+     * @param mixed $field [description]  要查询的字段
+     * @param string $tableName [description]  数据表名
+     * @return $this
+     */
+    function field($field, $tableName = '')
+    {
+        if (is_string($field)) {
+            $field = array_map('trim', explode(',', $field));
+        }
+
+        if (!empty($tableName)) {
+            // 获取表别名
+            $tableAs = $this->Analyze()->parseTableAs($tableName).'.';
+        } else {
+            $tableAs = '';
+        }
+
+
+        foreach ($field as $key => $val) {
+            //如果存在别名授予情况，提取别名
+            if (is_numeric($key) && stripos($val, ' as ') !== false) {
+                $arr = preg_split('/ as /i', $val);
+                unset($field[$key]);
+                $arr = array_map('trim', $arr);
+                $key = $arr[1];
+                $val = $arr[0];
+            }
+            $field[$key] = $tableAs . $val;
+        }
+
+        if (!empty($this->options['fields'])) {
+            $field = array_merge($this->options['fields'], $field);
+        }
+
+        $this->options['fields'] = array_unique($field);
         return $this;
     }
 
     /**
      * select
-     * @param string $data
-     * @return array
+     * @param string $fields    [description]   要查询的字段
+     * @return array|string
      */
-    function select($data = '*')
+    function select($fields = '*')
     {
-        self::whereSqlRepair();
+        if (!empty($fields) || $fields != '*') {
+            $this->field($fields);
+        }
 
-        // 生成SQL语句
-        $sql = "SELECT " . $data . "  FROM " .
-            $this->options['table'] .
-            $this->options['join'] .
-            $this->options['where'] .
-            $this->options['group'] .
-            $this->options['order'] .
-            $this->options['limit'];
+        $sql = $this->Analyze()->select($this->options);
 
         // 获取参数绑定
         $bind = $this->getBind();
 
         $this->free();
+        if (true === $this->options['fetch_sql']) {
+            // 获取实际执行的SQL语句
+            return $this->connection->getRealSql($sql, $bind);
+        }
 
         // 执行操作
         $result = $this->query($sql, $bind);
-        if (!is_array($result)) $result = [];
+        if (!is_array($result)) {
+            $result = [];
+        }
         return $result;
     }
 
     /**
      * find
-     * @param string $data
-     * @return array
+     * @param string $fields    [description]   要查询的字段
+     * @return array|string
      */
-    function find($data = '*')
+    function find($fields = '*')
     {
-        self::whereSqlRepair();
+        if (!empty($fields) || $fields != '*') {
+            $this->field($fields);
+        }
+        $options = $this->options;
 
-        // 生成SQL语句
-        $sql = "SELECT " . $data . "  FROM " .
-            $this->options['table'] .
-            $this->options['join'] .
-            $this->options['where'] .
-            $this->options['group'] .
-            $this->options['order'];
+        $sql = $this->Analyze()->select($options);
 
         // 获取参数绑定
         $bind = $this->getBind();
 
+
         $this->free();
+        if (true === $options['fetch_sql']) {
+            // 获取实际执行的SQL语句
+            return $this->connection->getRealSql($sql, $bind);
+        }
 
         // 执行操作
         $result = $this->query($sql, $bind, true);
-        if (!is_array($result)) $result = [];
+        if (!is_array($result)) {
+            $result = [];
+        }
         return $result;
     }
 
 
     /**
      * insert
-     * @param null|array $newData
-     * @return int
+     * @param null $newData [description]   参数数据
+     * @return array|int|PDOStatement|string
      */
     function insert($newData = null)
     {
-        if (empty($newData)) {
-            if (empty($this->preKeys) || empty($this->preValues)) {
-                $this->message = '需要新增的参数为空, 请检查连贯操作语句';
-                $this->db_error();
-            }
-        } else {
-            if (!is_array($newData)) {
-                $this->message = 'insert 参数必须为数组类型 {eg.[\'name\' => \'名字\', \'sex\' => \'性别\', ]}';
-                $this->db_error();
-            }
-            //补充参数
-            $this->add_prepare($newData);
-        }
+        //补充参数
+        $this->add_prepare($newData);
 
+        $options = $this->options;
 
-        $insertData = ' (`' . implode('`, `', $this->preKeys) . '`)';
-        $values = '';
-        //判断提交的值是否已经手动设置好了包含，没有的设置包含 绑定的除外 （其实应该根据字段类型进行设置）
-        foreach ($this->preValues as $v) {
-            $values .= $this->value_real($v) . ',';
-        }
+        //检测字段和参数
+        $sql = $this->Analyze()->insert($options);
 
-        // 生成SQL语句
-
-        $insertData .= ' VALUES (' . substr($values, 0, -1) . ')';
-        $sql = 'INSERT INTO ' . $this->options['table'] . $insertData;
         // 获取参数绑定
         $bind = $this->getBind();
-
         $this->free();
+        if (true === $options['fetch_sql']) {
+            // 获取实际执行的SQL语句
+            return $this->connection->getRealSql($sql, $bind);
+        }
 
-        return $this->execute($sql, $bind, true);
+        // 执行操作
+        $lastInsertID = $this->execute($sql, $bind, true);
+        return $lastInsertID;
     }
 
     /**
      * update
-     * @param null|array $value
+     * @param null|array $newData [description]   参数数据
+     * @param bool $where [description]   是否强行全表更新
      * @return int
      */
-    function update($value = null)
+    public function update($newData = null, $where = true)
     {
-        $updateData = '';
-        if (empty($value)) {
-            if (empty($this->preKeys) || empty($this->preValues)) {
-                $this->message = '需要更新的参数为空, 请检查连贯操作语句';
-                $this->db_error();
-            }
-        } else {
-            if (is_array($value)) {
-                $this->add_prepare($value);
-            } else {
-                $updateData = $value;
-            }
+        //补充参数
+        if (is_string($newData)) {
+            $newData = $this->updateStrToArray($newData);
         }
 
-        if (empty($updateData)) {
-            //判断提交的值是否已经手动设置好了包含，没有的设置包含 绑定的除外 （其实应该根据字段类型进行设置）
-            foreach ($this->preValues as $k => $v) {
-                $updateData .= $this->preKeys[$k] . ' = ' . $this->value_real_to_update($v, $this->preKeys[$k]) . ',';
-            }
-            $updateData = substr($updateData, 0, -1);
+        $this->add_prepare($newData);
+
+        $options = $this->options;
+        //检测是否使用where 语句，避免全表更新。全表更新校验预留
+        if (true === $where && empty($options['where'])) {
+            $msg = 'UPDATE 缺少 WHERE 条件，全表更新更新要素需为 FALSE';
+            $this->connection->db_error($msg);
         }
 
-        self::whereSqlRepair();
+        //检测字段和参数
+        $sql = $this->Analyze()->update($options);
 
-        // 生成SQL语句
-        $sql = "UPDATE " . $this->options['table'] . " SET " . $updateData . ' ' .
-            $this->options['where'] . ' ' . $this->options['order'] . ' ' . $this->options['limit'];
         // 获取参数绑定
         $bind = $this->getBind();
         $this->free();
-        return '' == $sql ? 0 : $this->execute($sql, $bind);
+        if (true === $options['fetch_sql']) {
+            // 获取实际执行的SQL语句
+            return $this->connection->getRealSql($sql, $bind);
+        }
+
+        return $this->execute($sql, $bind);
+    }
+
+    /**
+     * 更新字符串转数组
+     * @param $string   [description]   更新操作，所提交的字符串参数
+     * @return array
+     */
+    private function updateStrToArray($string)
+    {
+        $data = explode(',', $string);
+        $newData = [];
+        foreach ($data as $key => $val) {
+            $arr = explode('=', $val);
+            $arr = array_map('trim', $arr);
+            if (count($arr) != 2) {
+                $msg = '非法的【update】数据更新语句' . $string;
+                $this->connection->db_error($msg);
+            }
+            $newData[$arr[0]] = $arr[1];
+        }
+        return $newData;
     }
 
 
     /**
+     * 删除操作
      * delete
-     * @return PDOStatement
+     * @return string
      */
     function delete()
     {
-        self::whereSqlRepair();
-
         // 获取参数绑定
         $bind = $this->getBind();
+        $options = $this->options;
+        $this->free();
 
         // 生成删除SQL语句
-        $sql = 'DELETE FROM ' . $this->options['table'] . $this->options['where'];
+        $sql = $this->Analyze()->delete($options);
+        if ($options['fetch_sql']) {
+            // 获取实际执行的SQL语句
+            return $this->connection->getRealSql($sql, $bind);
+        }
 
         $result = $this->execute($sql, $bind);
-        $this->free();
         return $result;
     }
 
 
     /**
      * join
-     * @param string|array $data
-     * @param string $type
+     * @param string|array $join [description]   连接条件
+     * @param string $type [description]   连接方式类型
      * @return $this
      */
-    function join($data, $type = 'INNER')
+    function join($join, $type = 'INNER')
     {
-        //if(empty($data)) $this->db_error('{join} 内容请不要为空');
-
-        if (!empty($data)) {
-            if (!is_array($data)) {
-                $data = array($data);
-            }
-
-            foreach ($data as $v) {
-                $this->options['join'] .= ' ' . strtoupper($type) . ' JOIN ' . $this->prefix . $v;
-            }
+        if (empty($join)) {
+            return $this;
         }
+
+        //如果是字符串形式的 JOIN 内容
+        if (is_string($join)) {
+            $join = [$join];
+        }
+
+        //如果是数组无标记形式的 JOIN 内容
+        foreach ($join as $k => $arr) {
+            if (is_string($arr)) {
+                $arr = $this->parseJoinStr($arr);
+            } else {
+                if (!isset($arr['table']) || !isset($arr['on'])) {
+                    if (count($arr) != 2) {
+                        $msg = '[DB ERROR]:JOIN 语句语法错误 -【' . implode(' ON ', $arr) . '】';
+                        $this->connection->db_error($msg);
+                    }
+                    $arr = [
+                        'table' => $join[0],
+                        'on' => $join[1],
+                    ];
+                }
+            }
+
+
+            //分析连接表
+            $joinTable = $this->Analyze()->parseTable($arr['table']);
+
+            //分析 ON 参数
+            $joinOn = $arr['on'];
+            $this->Analyze()->parseFields($joinOn, '=');
+
+            $this->options['join'][] = strtoupper($type) . ' JOIN ' . $joinTable . ' ON ' . $joinOn;
+        }
+
+
         return $this;
+    }
+
+    /**
+     * 分析处理JOIN操作中使用字符串模式
+     * @param $joinStr  [description]   连接表字符串
+     * @return array
+     */
+    private function parseJoinStr($joinStr)
+    {
+        $joinStr = str_ireplace(' on ', ' ON ', $joinStr); //小写 on 转大写 ON
+        $joinArr = explode('ON', $joinStr);
+        $joinArr = array_map('trim', $joinArr);
+
+        if (count($joinArr) != 2) {
+            $msg = '[DB ERROR]:JOIN 语句语法错误 -【' . $joinStr . '】';
+            $this->connection->db_error($msg);
+        }
+        $join = [
+            'table' => $joinArr[0],
+            'on' => $joinArr[1],
+        ];
+        return $join;
     }
 
     /**
@@ -416,153 +580,173 @@ class Query
 
     /**
      * where
-     * @param string|array $where
+     * @param string|array $where   [description]   搜索条件
      * @return $this
      */
     function where($where)
     {
-        if (empty($where))
+        if (empty($where)) {
             return $this;
+        }
 
         if (is_string($where)) {
-            $where = [$where];
-        }
-
-        $and = '';
-        foreach ($where as $k => $value) {
-            if ($k != 0) {
-                $and = ' AND ';
-            }
-
-
-            //对where 语句参数进行拆解处理值
-            if (false !== strpos($value, '=') &&
-                false === stripos($value, 'not exists') &&
-                false === stripos($value, 'not exists')
-            ) {
-                $arr = explode('=', $value);
-                if (count($arr) == 2) {
-                    $this->where .= $and . $arr[0] . '=' . $this->value_real(trim($arr[1]));
-                } else {
-                    $this->where .= $value;
-                }
-
-            } else {
-                $this->where .= $and . $value;
+            $this->options['where'][] = [
+                'type' => 'where',
+                'data' => trim($where),
+            ];
+        } else {
+            $where = array_map('trim', $where);
+            foreach ($where as $str) {
+                $this->options['where'][] = [
+                    'type' => 'where',
+                    'data' => trim($str),
+                ];
             }
         }
+
         return $this;
     }
 
     /**
      * whereOr
-     * @param $whereOr
+     * @param $whereOr  [description]   搜索条件
      * @return $this
      */
     function whereOr($whereOr)
     {
-        if (empty($whereOr))
+        if (empty($whereOr)) {
             return $this;
-
-        if (is_string($whereOr)) {
-            $whereOr = [$whereOr];
         }
 
-        $i = 0;
-        $and = '';
-        foreach ($whereOr as $value) {
-            if ($i != 0) {
-                $and = ' OR ';
+        if (is_string($whereOr)) {
+            $this->options['where'][] = [
+                'type' => 'where',
+                'data' => trim($whereOr),
+            ];
+        } else {
+            $whereOr = array_map('trim', $whereOr);
+            foreach ($whereOr as $str) {
+                $this->options['where'][] = [
+                    'type' => 'or',
+                    'data' => trim($str),
+                ];
             }
-            //对where 语句参数进行拆解处理值
-            $arr = explode('=', $value);
-            $this->whereOr .= $and . $arr[0] . '=' . $this->value_real(trim($arr[1]));
-            $i++;
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * order
+     * @param string|array $field [description]  排序依据
+     * @param string $sort [description]   排序类型
+     * @return $this
+     */
+    function order($field, $sort = null)
+    {
+        if (empty($field)) {
+            return $this;
+        }
+
+        if(is_string($field)) {
+            $field = [$field];
+        }
+
+        foreach ($field as $str) {
+            if (false !== strpos($str, ' ')) {
+                $str = explode(' ', $str);
+                $sort = empty(end($str)) ? $sort : end($str);
+                $field = $str[0];
+            }
+            $this->options['order'][$field] = $sort;
         }
         return $this;
     }
 
     /**
-     * whereSqlRepair
-     * 条件语句 修补
-     */
-    private function whereSqlRepair()
-    {
-        $where = $this->where;
-        if (!empty($where)) {
-            $this->options['where'] = ' WHERE ' . $where;
-        }
-
-        $whereOr = $this->whereOr;
-        if (!empty($whereOr)) {
-            if (empty($this->options['where'])) {
-                $this->options['where'] = ' WHERE ' . $whereOr;
-            } else {
-                //$this->options['where'] .= ' OR ' . $whereOr;
-                $this->options['where'] .= ' AND ( ' . $whereOr . ' )';
-            }
-        }
-        $this->where = '';
-        $this->whereOr = '';
-    }
-
-    /**
-     * order
-     * @param string|array $order
+     * 查询注释
+     * @access public
+     * @param string $comment 注释
      * @return $this
      */
-    function order($order = null)
+    public function comment($comment)
     {
-        if (null !== $order && !empty($order)) {
-            if (is_array($order)) {
-                $order = implode(', ', $order);
-            }
-
-            $this->options['order'] = ' ORDER BY ' . $order;
-        }
-
-
+        $this->options['comment'] = $comment;
         return $this;
     }
 
     /**
      * 指定查询数量
      * @access public
-     * @param mixed $offset 起始位置
-     * @param mixed $length 查询数量
+     * @param int $offset [description]  起始位置
+     * @param int $length [description] 查询数量
      * @return $this
      */
-    function limit($offset = '1', $length = null)
+    function limit($offset = 1, $length = null)
     {
-        $this->options['limit'] = ' LIMIT ' . $offset;
+        $this->options['limit'] = [$offset];
         if (null !== $length && is_numeric($length)) {
-            $this->options['limit'] .= ', ' . $length;
+            $this->options['limit'][] = $length;
         }
         return $this;
     }
 
     /**
      * group
-     * @param string $group
+     * @param string $group [description]   排序
      * @return $this
      */
     function group($group = null)
     {
-        if (null !== $group && !empty($group)) {
-            $this->options['group'] = ' GROUP BY ' . $group;
-        }
+        $this->options['group'] = $group;
         return $this;
     }
 
+    /**
+     * 指定having查询
+     * @access public
+     * @param string $having [description]   过滤条件
+     * @return $this
+     */
+    public function having($having)
+    {
+        $this->options['having'] = $having;
+        return $this;
+    }
+
+    /**
+     * 获取执行的SQL语句
+     * @access public
+     * @param boolean $fetch [description] 是否返回sql
+     * @return $this
+     */
+    public function fetchSql($fetch = true)
+    {
+        $this->options['fetch_sql'] = $fetch;
+        return $this;
+    }
+
+    /**
+     * 指定强制索引
+     * @access public
+     * @param string $force [description] 索引名称
+     * @return $this
+     */
+    public function force($force)
+    {
+        $this->options['force'] = $force;
+        return $this;
+    }
 
     /**
      * query 执行查询 返回数据集
-     * @param $sql
-     * @param array $bind
-     * @param bool $fetch
+     * @param $sql  [description]sql 语句
+     * @param array $bind   [description]   绑定参数
+     * @param bool $fetch   [description]   是否返回多维数组
      * @return PDOStatement
      */
-    function query($sql, $bind = [], $fetch = false)
+    public function query($sql, $bind = [], $fetch = false)
     {
         return $this->connection->query($sql, $bind, $fetch);
     }
@@ -570,13 +754,13 @@ class Query
     /**
      * 执行语句
      * @access public
-     * @param string $sql sql指令
-     * @param array $bind 参数绑定
-     * @param bool $getLastInsID
+     * @param string $sql [description] sql指令
+     * @param array $bind [description] 参数绑定
+     * @param bool [description]    $getLastInsID
      * @return int
      * @throws PDOException
      */
-    private function execute($sql, $bind, $getLastInsID = false)
+    public function execute($sql, $bind, $getLastInsID = false)
     {
         return $this->connection->execute($sql, $bind, $getLastInsID);
     }
@@ -585,7 +769,7 @@ class Query
      * rowCount 返回受影响的数量
      * @return int
      */
-    function rowCount()
+    public function rowCount()
     {
         return $this->connection->rowCount();
     }
@@ -595,21 +779,28 @@ class Query
      * getLastSql 获取最后一条执行的SQL语句
      * @return string
      */
-    function getLastSql()
+    public function getLastSql()
     {
         return $this->connection->getLastSql();
     }
 
     /**
-     * 获取绑定的参数 并清空
+     * 获取绑定的参数
      * @access public
-     * @return array
+     * @param $key  [description]   绑定的参数名称
+     * @return array|string
      */
-    private function getBind()
+    public function getBind($key = null)
     {
-        $bind = $this->bind;
-        $this->bind = [];
-        return $bind;
+        if (null !== $key && is_string($key)) {
+            if (isset($this->bind[$key])) {
+                return $this->bind[$key];
+            } else {
+                return '';
+            }
+        } else {
+            return $this->bind;
+        }
     }
 
     /**
@@ -617,151 +808,19 @@ class Query
      * @param null $sequence
      * @return string
      */
-    function getLastInsId($sequence = null)
+    public function getLastInsId($sequence = null)
     {
         return $this->connection->getLastInsID($sequence);
     }
 
     /**
      * add_prepare 补充参数
-     * @param array $data
+     * @param array $data   [description]   参数
      */
     private function add_prepare($data)
     {
-        $this->preKeys = array_merge($this->preKeys, array_keys($data));
-        $this->preValues = array_merge($this->preValues, array_values($data));
-    }
-
-
-    /**
-     * value_real_to_update 参数值可用化
-     * @param $value
-     * @param $key
-     * @return string
-     */
-    function value_real_to_update($value, $key = null)
-    {
-        $realStr = '';
-
-        //检测是否是直接指定模式
-        if (is_array($value)) {
-            $valueCount = count($value);
-            if ($valueCount == 1) {
-                die('db update value special is error');
-            }
-
-            //str sum avg
-            switch (strtolower($value[0])) {
-                case 'str':
-                    $realStr = '"' . $value[1] . '"';
-                    break;
-
-                //计算差
-                case 'minus':
-                    $minusV = $value;
-                    unset($minusV[0]);
-                    if ($valueCount == 2) {
-                        if (null === $key) {
-                            die('db minus value is error');
-                        }
-                        $minusV[2] = $minusV[1];
-                        $minusV[1] = $key;
-                    }
-
-                    foreach ($minusV as $k => $v) {
-                        if ($k > 1) {
-                            $realStr .= ' - ';
-                        }
-                        $realStr .= is_numeric($v) || is_int($v) ? '"' . $v . '"' : '`' . $v . '`';
-                    }
-                    unset($minusV);
-                    break;
-
-                //计算和
-                case 'sum':
-                    $sumV = $value;
-                    unset($sumV[0]);
-                    if ($valueCount == 2) {
-                        if (null === $key) {
-                            die('db sum is error');
-                        }
-                        $sumV[2] = $key;
-                    }
-
-                    foreach ($sumV as $k => $v) {
-                        if ($k > 1) {
-                            $realStr .= ' + ';
-                        }
-                        $realStr .= is_numeric($v) || is_int($v) ? '"' . $v . '"' : '`' . $v . '`';
-                    }
-                    unset($sumV);
-                    break;
-
-                default:
-                    $realStr = $value[0];
-            }
-        } else {
-            $realStr = $this->value_real($value);
-        }
-
-        return $realStr;
-    }
-
-    /**
-     * value_real 参数值可用化
-     * @param $value
-     * @return string
-     */
-    function value_real($value)
-    {
-        //检查是否自己已经包好了
-        $strArr = str_split(trim($value));
-        $startStr = $strArr[0];
-        $endStr = end($strArr);
-
-        //检测是否是直接指定模式
-        switch (true) {
-            case empty($value):
-                return '"' . $value . '"';
-                break;
-
-            case $startStr == ':':
-                return $value;
-                break;
-
-            case $value == '?':
-                return $value;
-                break;
-
-            case is_numeric($value):
-                return '"' . $value . '"';
-                break;
-
-            case is_int($value):
-                return $value;
-                break;
-
-            case $startStr == '"' && $endStr == '"' :
-                return $value;
-                break;
-
-            case $startStr == '\'' && $endStr == '\'' :
-                return $value;
-                break;
-
-            default:
-                return '"' . str_replace('"', '\"', $value) . '"';
-                break;
+        if (!empty($data) && is_array($data)) {
+            $this->options['data'] = array_merge($this->options['data'], $data);
         }
     }
-
-    function db_error($message = null)
-    {
-        if ($this->getConfig('db_error') === true) {
-            if ($message !== null) $this->message = $message;
-            echo "\n" . '<br/>' . "\n" . $this->message;
-        }
-        die;
-    }
-
 }

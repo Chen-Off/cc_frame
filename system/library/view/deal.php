@@ -240,10 +240,11 @@ class deal
         preg_match_all('/{\$brtUrl(\:|->)(.*)}/isU', $content, $match);
 
         if (!empty($match[2])) {
-            foreach ($match[2] as $k => $item) {
-                $brtUrl = brtUrl(trim($item));
+            $array = array_map('trim', $match[2]);
+            $array = array_map('brtUrl', $array);
+            foreach ($array as $k => $url) {
                 $old_item = $match[0][$k];
-                $content = str_replace($old_item, $brtUrl, $content);
+                $content = str_replace($old_item, $url, $content);
             }
         }
         return $content;

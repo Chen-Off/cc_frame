@@ -15,23 +15,32 @@ use PDO;
  * @method Query commit() static 提交预处理语句
  * 
  * @method Query lock(true|false $lock) static 锁表
+ * @method Query distinct(true|false $lock) static 去重
  *
  * @method Query join(string|array $join, string $type = 'INNER') static JOIN查询
  * @method Query bind(number|array $bind, bool|string $value = null, string $type = PDO::PARAM_STR) static BIND绑定参数
  * @method Query whereOr(string|array $whereOr) static 或者查询条件
  * @method Query where(string|array $where) static 查询条件
+ * @method Query having(string $having) static HAVING 查询条件限制
+ *
+ * @method Query force(string $having) static 指定强制索引
 
  * @method Query order(string|array $order) static 查询ORDER
- * @method Query limit(string $offset = 1, integer $length = null) static 查询LIMIT
+ * @method Query limit(string $offset = '1', integer $length = null) static 查询LIMIT
  * @method Query group(mixed $group) static 查询GROUP
+ * @method Query comment(string $comment) static 注释
+ *
  *
  * @method Query data(string|array $file, $value = null) static 更新插入的数据
+ * @method Query field(string|array $field, $table = '') static 指定查询字段
  *
  * @method Query delete() static 删除记录
- * @method Query find(mixed $data = []) static 查询单个记录
- * @method Query select(string|array $select = '*') static 查询多个记录
- * @method Query update(bool|array $update = null) static 更新记录
+ * @method Query find(string|array $fields = '') static 查询单个记录
+ * @method Query select(string|array $fields = '') static 查询多个记录
+ * @method Query update(bool|array $update = null, $where = false) static 更新记录
  * @method Query insert(bool|array $insert = null) static 插入一条记录
+ * @method Query fetchSql(bool $fetch = true) static 获取SQL语句，不执行代码
+ *
  *
  * @method Query query(string $sql,array $bind = [], $fetch = false) static 执行sql语句
  * @method Query execute(string $sql,array $bind = [], boolean $getLastInsID = false) static 执行sql语句
@@ -48,7 +57,6 @@ use PDO;
 
 class Db
 {
-
     public static $instance = [];
     private static $msg;
 

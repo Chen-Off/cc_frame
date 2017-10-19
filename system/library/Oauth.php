@@ -1,4 +1,5 @@
 <?php
+
 namespace cc;
 /**
  * Class Oauth 鉴权
@@ -52,11 +53,13 @@ class Oauth
     static private $commonAuth = [];
 
 
-    static function getCommonAuth() {
+    static function getCommonAuth()
+    {
         return self::$commonAuth;
     }
 
-    static function getSpecialAuth() {
+    static function getSpecialAuth()
+    {
         return self::$specialAuth;
     }
 
@@ -146,7 +149,7 @@ class Oauth
      */
     static function OauthSign()
     {
-        if (true !== Config::getCB('oauth','account') || URL_MODULES == 'Access') {
+        if (true !== Config::getCB('oauth', 'account') || URL_MODULES == 'Access') {
             return true;
         }
 
@@ -233,11 +236,11 @@ class Oauth
     static function getCommonAuthPage()
     {
         //载入缓存
-        $cacheName = md5('power_common_'.static::$signToken);
+        $cacheName = md5('power_common_' . static::$signToken);
         $data = static::getCache($cacheName);
 
         //生成新的缓存
-        if(false === $data) {
+        if (false === $data) {
             $power = static::$user['u_power'];
             $join = [];
             $where = [];
@@ -256,7 +259,7 @@ class Oauth
             foreach ($query as $arr) {
                 $data[$arr['function_id']] = $arr;
             }
-            Cache::set($cacheName, $data);
+            Cache::set($cacheName, $data, 86400);
         }
 
         static::$commonAuth = $data;
@@ -269,11 +272,11 @@ class Oauth
     static function getSpecialAuthPage()
     {
         //载入缓存
-        $cacheName = md5('power_auth_'.static::$signToken);
+        $cacheName = md5('power_auth_' . static::$signToken);
         $data = static::getCache($cacheName);
 
         //生成新的缓存
-        if(false === $data) {
+        if (false === $data) {
             //获取该帐号所有可用的已授权内容
             $authList = static::getAuthToAdmin($_SESSION['u']['id']);
             $data = [];
@@ -291,7 +294,7 @@ class Oauth
                     }
                 }
             }
-            $rs = Cache::set($cacheName, $data);
+            $rs = Cache::set($cacheName, $data, 86400);
         }
 
         static::$specialAuth = $data;
@@ -303,10 +306,11 @@ class Oauth
      * @param $cacheName
      * @return bool|mixed
      */
-    static private function getCache($cacheName) {
-        if(true === Cache::has($cacheName)) {
+    static private function getCache($cacheName)
+    {
+        if (true === Cache::has($cacheName)) {
             $cacheData = Cache::get($cacheName);
-            if(!is_array($cacheData)) {
+            if (!is_array($cacheData)) {
                 Cache::rm($cacheName);
             } else {
                 return $cacheData;
@@ -370,15 +374,15 @@ class Oauth
 
         self::getUserInfo();
         self::$power = Config::getCE('admin_power');
-        if(false === self::$power) {
+        if (false === self::$power) {
             DeBug::msgExit('[Config Extend Error]: 错误的权限设定{admin_power}');
         }
         self::$powerName = Config::getCE('admin_power_name');
-        if(false === self::$powerName) {
+        if (false === self::$powerName) {
             DeBug::msgExit('[Config Extend Error]: 错误的权限名称设定{admin_power_name}');
         }
         self::$powerShop = Config::getCE('admin_power_shop');
-        if(false === self::$powerShop) {
+        if (false === self::$powerShop) {
             DeBug::msgExit('[Config Extend Error]: 错误的权限设定{admin_power_shop}');
         }
 
@@ -441,15 +445,17 @@ class Oauth
     private static function getUserInfo()
     {
         //载入缓存
-        $cacheName = md5('account_'.static::$signToken);
+        $cacheName = md5('account_' . static::$signToken);
         $info = static::getCache($cacheName);
-        if(false === $info) {
+        if (false === $info) {
             //获取权限总数
             $query = Db::table('admin_level')->select();
             $powerArr = self::$power = array_column($query, 'admin_level_id');
 
-            $join = ['admin_level t2 ON t2.admin_level_id = t1.admin_level_id'];
-            $join[] = 'admin_groups t3 ON t3.group_id = t1.group_id';
+            $join =[
+                    'admin_level t2 ON t2.admin_level_id = t1.admin_level_id',
+                    'admin_groups t3 ON t3.group_id = t1.group_id'
+                ];
             $where = ['t1.admin_id =' . $_SESSION['u']['id']];
             $find = 't1.admin_level_id, t1.group_id, t1.admin_name, t1.admin_email, t1.tel, t1.admin_id, t2.admin_level_name, t3.group_name';
             $info = Db::table('admin t1')->join($join, 'LEFT')->where($where)->find($find);
@@ -458,7 +464,7 @@ class Oauth
                 //没有权限访问 跳转到禁止页面
                 jumpUrl(createUrl('Access', 'page', 'no_power'));
             }
-            Cache::set($cacheName, $info);
+            Cache::set($cacheName, $info, 86400);
         }
 
         //操作员信息设置

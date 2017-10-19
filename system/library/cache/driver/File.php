@@ -58,16 +58,17 @@ class File extends Driver
      */
     protected function getCacheKey($name)
     {
+        $options = $this->options;
         $name = md5($name);
-        if ($this->options['cache_subdir']) {
+        if ($options['cache_subdir']) {
             // 使用子目录
             switch (true) {
-                case is_string($this->options['cache_subdir']):
-                    $name = $this->options['cache_subdir'] . DS . $name;
+                case is_string($options['cache_subdir']):
+                    $name = $options['cache_subdir'] . DS . $name;
                     break;
 
-                case !empty($this->options['prefix']):
-                    $name = $this->options['prefix'].date('Ymd') . DS . $name;
+                case !empty($options['prefix']):
+                    $name = $options['prefix'].date('Ymd') . DS . $name;
                     break;
 
                 default:
@@ -76,7 +77,7 @@ class File extends Driver
             }
         }
 
-        $filename = $this->options['path'] . $name . EXT;
+        $filename = $options['path'] . $name . EXT;
         $dir      = dirname($filename);
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
