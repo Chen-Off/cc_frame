@@ -15,7 +15,7 @@ use PDO;
  * @method Query commit() static 提交预处理语句
  * 
  * @method Query lock(true|false $lock) static 锁表
- * @method Query distinct(true|false $lock) static 去重
+ * @method Query distinct(true|false $distinct) static 去重
  *
  * @method Query join(string|array $join, string $type = 'INNER') static JOIN查询
  * @method Query bind(number|array $bind, bool|string $value = null, string $type = PDO::PARAM_STR) static BIND绑定参数
@@ -23,7 +23,7 @@ use PDO;
  * @method Query where(string|array $where) static 查询条件
  * @method Query having(string $having) static HAVING 查询条件限制
  *
- * @method Query force(string $having) static 指定强制索引
+ * @method Query force(string $force) static 指定强制索引
 
  * @method Query order(string|array $order) static 查询ORDER
  * @method Query limit(string $offset = '1', integer $length = null) static 查询LIMIT

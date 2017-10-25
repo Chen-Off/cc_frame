@@ -39,8 +39,11 @@ class Lang
      * @param $modules
      * @return array
      */
-    public static function getM($modules)
+    public static function getM($modules = null)
     {
+        if(null === $modules) {
+            $modules = URL_MODULES;
+        }
         return self::getModulesLang($modules);
     }
 

@@ -26,6 +26,8 @@ require APP_PATH . 'lang' . EXT; //加载常规语言包数据
 define('SYSTEM_PATH', ROOT_DIR . 'system' . DS);//框架系统文件库
 define('THIRD_PARTY_PATH', SYSTEM_PATH . 'third-party' . DS);//第三方插件
 
+
+define('TEMP_EP_PATH', ROOT_DIR.'tempEp'.DS);//公共临时文件夹
 define('TEMPLATES_PATH', ROOT_DIR . 'tpl' . DS);//模版文件路径
 define('PUBLIC_DATA_PATH', ROOT_DIR . 'public_data' . DS);//公共数据存储文件夹
 define('CACHE_PATH', ROOT_DIR . 'cc_cache' . DS);// 缓存文件路径
@@ -48,6 +50,6 @@ define('MVC_ROOT', ROOT_DIR . 'modules' . DS);//模块根目录
 define('MVC_CONTROLLER_PATH', MVC_ROOT . 'controllers' . DS);//模块控制端路径
 define('MVC_VIEWS_PATH', MVC_ROOT . 'views' . DS);//模块视图端路径
 define('MVC_STYLES_PATH', MVC_ROOT . 'styles' . DS);//模块独立样式路径
-define('MVC_STYLES_HTTP', 'modules'.DS.'styles'.DS);//模块独立样式URL
+define('MVC_STYLES_HTTP', 'modules/styles/');//模块独立样式URL
 //载入 library 新型类库
 

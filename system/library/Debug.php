@@ -5,7 +5,7 @@ class DeBug {
     private static $logPath = '';
     function __construct()
     {
-        self::$logPath = TEMP_EP_HTTP.DS.'log'.DS;
+        self::$logPath = TEMP_EP_PATH.DS.'log'.DS;
         if(!is_dir(self::$logPath)) mkdir(self::$logPath, 0744, true);
     }
 

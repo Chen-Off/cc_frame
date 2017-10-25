@@ -52,13 +52,13 @@ class Analyze
 
     protected $exp = [
         '> TIME', '< TIME', '>= TIME', '<= TIME',
-        '<>', '<=', '>=', '>','<','!=','=',
+        '<>', '<=', '>=', '>', '<', '!=', '=',
         'NOT LIKE', 'LIKE',
         'NOT IN', 'IN',
         'EXP',
         'NOT EXISTS', 'EXISTS',
         'IS NOT NULL', 'IS NULL',
-        'NOT BETWEEN TIME','BETWEEN TIME','NOT BETWEEN','BETWEEN'
+        'NOT BETWEEN TIME', 'BETWEEN TIME', 'NOT BETWEEN', 'BETWEEN'
     ];
 
     // SQL表达式
@@ -167,8 +167,8 @@ class Analyze
     /**
      * 检测缓存
      * hasCache
-     * @param $cache    [description]   缓存名称
-     * @param $table    [description]   表名
+     * @param $cache [description]   缓存名称
+     * @param $table [description]   表名
      * @return bool
      */
     private function hasCache($cache, $table)
@@ -187,8 +187,8 @@ class Analyze
     /**
      * 获取缓存
      * getCache
-     * @param $cache    [description]   缓存名称
-     * @param $table    [description]   表名
+     * @param $cache [description]   缓存名称
+     * @param $table [description]   表名
      * @return array|bool
      */
     private function getCache($cache, $table)
@@ -198,7 +198,7 @@ class Analyze
             return true;
         } else {
             //检测是否存在，并获取数据结构
-            $sql = 'SHOW TABLES LIKE "' . $table.'"';
+            $sql = 'SHOW TABLES LIKE "' . $table . '"';
 
             $rs = $this->connection->query($sql);
             if (!empty($rs)) {
@@ -223,8 +223,8 @@ class Analyze
     /**
      * 写入缓存
      * setCache
-     * @param $cache    [description]   缓存名称
-     * @param $data    [description]   缓存数据
+     * @param $cache [description]   缓存名称
+     * @param $data [description]   缓存数据
      * @return bool
      */
     private function setCache($cache, $data)
@@ -244,8 +244,8 @@ class Analyze
     /**
      * 设置表数据及其别名
      * setTables
-     * @param $table    [description]   表名
-     * @param $as   [description]   表别名
+     * @param $table [description]   表名
+     * @param $as [description]   表别名
      * @param $main
      */
     protected function setTables($table, $as, $main = false)
@@ -261,7 +261,7 @@ class Analyze
     /**
      * distinct分析
      * @access protected
-     * @param mixed $distinct   [description]
+     * @param mixed $distinct [description]
      * @return string
      */
     protected function parseDistinct($distinct)
@@ -278,7 +278,7 @@ class Analyze
      */
     public function parseFields($fields, $exp = ',')
     {
-        if(empty($fields)) {
+        if (empty($fields)) {
             return $fields;
         }
         if (is_string($fields)) {
@@ -314,7 +314,7 @@ class Analyze
                     $this->connection->db_error($msg);
                 }
 
-                if($field == '*') {
+                if ($field == '*') {
                     continue;
                 }
 
@@ -383,7 +383,7 @@ class Analyze
 
         //优先处理 WHERE 条件
         foreach ($where as $valArr) {
-            if(!is_array($valArr['data'])) {
+            if (!is_array($valArr['data'])) {
                 $val = $valArr['data'];
                 $valData = [];
                 //根据条件表达式要素切割条件
@@ -402,7 +402,7 @@ class Analyze
             } else {
                 $valData = $valArr['data'];
                 //检测是否存在表达式
-                if(!in_array($valData['op'], $expArr)) {
+                if (!in_array($valData['op'], $expArr)) {
                     $msg = '[DB ERROR]:错误的WHERE条件 表达式 -【' . $valData['op'] . '】';
                     break;
                 }
@@ -449,16 +449,16 @@ class Analyze
 
     /**
      * 处理where 条件字段内容
-     * @param $field    [description]   字段
-     * @param $exp  [description]   表达式
-     * @param $value    [description]   字段值内容
+     * @param $field [description]   字段
+     * @param $exp [description]   表达式
+     * @param $value [description]   字段值内容
      * @return string
      */
     private function parseWhereItem($field, $exp, $value)
     {
         //检测是否问号[?]绑定
         if ($value == '?') {
-            return $field. ' '.$exp .' '. $value;
+            return $field . ' ' . $exp . ' ' . $value;
         }
 
         //检测是否使用参数绑定
@@ -468,43 +468,50 @@ class Analyze
                 $msg = '【' . $field . '】参数绑定【' . $value . '】未设置绑定内容';
                 $this->connection->db_error($msg);
             }
-            return $field. ' '.$exp .' '. $value;
+            return $field . ' ' . $exp . ' ' . $value;
         }
 
         switch (true) {
             // 比较运算 及 模糊匹配
             case in_array($exp, ['=', '<>', '>', '>=', '<', '<=', 'LIKE', 'NOT LIKE']):
                 $value = $this->dealFieldVal($value);
-                $whereStr = $field. ' '.$exp .' '.'"'.$value.'"';
+                //是否属于内查询条件 `c.admin_id = admin_id`
+                if(false === $value['inside']) {
+                    $value = '"' . $value['val'] . '"';
+                } else {
+                    $value = $value['val'];
+                }
+
+                $whereStr = $field . ' ' . $exp . ' ' . $value;
                 break;
 
             // NULL 查询
             case in_array($exp, ['IS NOT NULL', 'IS NULL']):
-                $whereStr = $field. ' '.$exp .' ';
+                $whereStr = $field . ' ' . $exp . ' ';
                 break;
 
             // IN 查询
             case in_array($exp, ['NOT IN', 'IN']):
-                $whereStr = $field. ' '.$exp .' '. $value;
+                $whereStr = $field . ' ' . $exp . ' ' . $value;
                 break;
 
             // BETWEEN 查询
             case in_array($exp, ['NOT BETWEEN', 'BETWEEN']):
-                $whereStr = $field. ' '.$exp .' '. $value;
+                $whereStr = $field . ' ' . $exp . ' ' . $value;
                 break;
 
             // EXISTS 查询
             case in_array($exp, ['NOT EXISTS', 'EXISTS']):
-                $whereStr = $field. ' '.$exp .' '. $value;
+                $whereStr = $field . ' ' . $exp . ' ' . $value;
                 break;
 
             // TIME 查询
             case in_array($exp, ['< TIME', '> TIME', '<= TIME', '>= TIME']):
-                $whereStr = $field. ' '.$exp .' '. $value;
+                $whereStr = $field . ' ' . $exp . ' ' . $value;
                 break;
 
             default:
-                $whereStr = $field. ' '.$exp .' '. $value;
+                $whereStr = $field . ' ' . $exp . ' ' . $value;
 
         }
         return $whereStr;
@@ -731,7 +738,8 @@ class Analyze
             }
 
             //值内容处理
-            $val = $this->dealFieldVal($val);
+            $valQs = $this->dealFieldVal($val);
+            $val = $valQs['val'];
             //检测字段值类型是否绑定和正确
             $msg = $this->checkFieldVal(strtolower($fieldConst['Type']), $val);
             //有错误的讯息，退出
@@ -740,8 +748,8 @@ class Analyze
                 break;
             }
 
-            //没有错误和非绑定类型，手动包裹值
-            if (false === $bindStatus) {
+            //没有错误和非绑定类型，手动包裹值，字段内容
+            if (false === $bindStatus || false === $valQs['inside']) {
                 $data[$field] = '"' . $val . '"';
             }
         }
@@ -850,7 +858,7 @@ class Analyze
     /**
      * 移除值的手动包裹
      * @param $val
-     * @return string
+     * @return array
      */
     private function dealFieldVal($val)
     {
@@ -858,16 +866,32 @@ class Analyze
         $startStr = substr($val, 0, 1);
         $endStr = substr($val, -1);
 
+        //是否内查询字段
+        $Inside = false;
+
         //检测是否是直接指定模式
         switch (true) {
             case $startStr == '"' && $endStr == '"' :
             case $startStr == '\'' && $endStr == '\'' :
                 $val = substr($val, 1, -1);
+
+                break;
+
+            case $endStr == '`' :
+                if($startStr == '`') {
+                    $Inside = true;
+                    break;
+                }
+                if(strpos($val, '.') != false && substr($val,strpos($val, '.') +1 , 1) == '`') {
+                    $Inside = true;
+                    break;
+                }
+
                 break;
 
             default:
         }
-        return $val;
+        return ['val' => $val, 'inside' => $Inside];
     }
 
     /**
@@ -923,7 +947,7 @@ class Analyze
     public function delete($options)
     {
         $sql = str_replace(
-            ['%TABLE%', '%USING%', '%JOIN%', '%WHERE%', '%ORDER%', '%LIMIT%',  '%COMMENT%'],
+            ['%TABLE%', '%USING%', '%JOIN%', '%WHERE%', '%ORDER%', '%LIMIT%', '%COMMENT%'],
             [
                 $this->parseTable($options['table']),
                 !empty($options['using']) ? ' USING ' . $this->parseTable($options['using']) . ' ' : '',

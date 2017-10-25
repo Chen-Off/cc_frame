@@ -693,13 +693,14 @@ class Query
             $field = [$field];
         }
 
-        foreach ($field as $str) {
-            if (false !== strpos($str, ' ')) {
-                $str = explode(' ', $str);
-                $sort = empty(end($str)) ? $sort : end($str);
-                $field = $str[0];
+        foreach ($field as $f_val) {
+            if (false !== strpos($f_val, ' ')) {
+                $arr = explode(' ', $f_val);
+                $sort = empty(end($arr)) ? $sort : end($arr);
+                $f_val = $arr[0];
             }
-            $this->options['order'][$field] = $sort;
+
+            $this->options['order'][$f_val] = $sort;
         }
         return $this;
     }

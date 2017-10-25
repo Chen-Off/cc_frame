@@ -340,7 +340,7 @@ function cc__checkPhone($phone)
 
 function cc__checkWeChat($weChat)
 {
-    if (is_string($weChat) && preg_match('/^[_0-9a-z-]{6,16}$/i', $weChat)) {
+    if (is_string($weChat) && preg_match('/^[_0-9a-z-]{6,20}$/i', $weChat)) {
         return true;
     } else {
         return false;
