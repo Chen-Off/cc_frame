@@ -1,5 +1,29 @@
 # 问题日志
 
+【2017年10月7日】Db 基本类模拟ThinkPHP 优化操作，优化验证
+------
+完成时间：2017年10月19日 <br>
+详细： <br>
+新增加文件`system/library/db/Analyze.php`, 验证校验类 验证所传递的参数格式与内容是否正确<br>
+自动校验表是否存在，数据库配置中设置开关校验表字段是否存在且在update和insert中所提交的数据是否正确【只适用于常规数据字符串等等】<br>
+新增加部分操作
+```
+Db::table('admin')->field('*') // 指定查询字段
+Db::table('admin')->comment('注释')  //注释
+Db::table('admin')->force($force)  //指定强制索引
+Db::table('admin')->having($having)  //查询条件限制
+Db::table('admin')->distinct($having)  //去重
+Db::table('admin')->lock(true)  //锁表【select 有效】
+```
+修改 where 和 whereOr 条件语句的书写设定
+```
+$where = 'id = 1';//字符串模式
+$where = [
+    'id = 1',//多条件数组字符串模式
+    ['id' , '=',1], //多条件直接设定表达式模式['字段' , '表达式','参数']
+];
+```
+
 【2017年9月26日】分页公共类设定
 ------
 完成时间：2017年9月29日 <br>
