@@ -1,6 +1,22 @@
 # 问题日志
 
 
+【2017年10月31日】Db 基本类模拟ThinkPHP 查询功能优化操作
+------
+完成时间：2017年10月31日 <br>
+详细： <br>
+修改文件`system/library/db/Query.php`<br>
+新增加部分操作
+```
+Db::table('admin')->avg('admin_id'); // 查询某个字段平均值，直接得到结果
+Db::table('admin')->max('admin_id'); // 查询某个字段最大值，直接得到结果
+Db::table('admin')->min('admin_id'); // 查询某个字段最小值，直接得到结果
+Db::table('admin')->sum('admin_id'); // 查询某个字段最大值，直接得到结果
+Db::table('admin')->sum('admin_id'); // 查询某个字段总和，直接得到结果
+Db::table('admin')->count('admin_id'); // 查询某个字段总数，直接得到结果
+```
+
+
 【2017年10月25日】Db 基本类bug修复，在生成内联查询所需的sql语句中， where 条件为字段是，被辨识为常规字符串类型
 ------
 完成时间：2017年10月25日 <br>
