@@ -146,18 +146,21 @@ class Analyze
         $tableName = $tableArr[0];
         $tableAs = isset($tableArr[1]) ? $tableArr[1] : '';
 
-        //优先检测缓存
-        $cacheName = $this->tableCacheName;
-        $cache = self::hasCache($cacheName, $tableName);
+        if(strpos($tableName, '(') ===  false) {
+            //优先检测缓存
+            $cacheName = $this->tableCacheName;
+            $cache = self::hasCache($cacheName, $tableName);
 
-        if (false === $cache) {
-            //检测是否存在，并获取数据结构
-            $rs = self::getCache($cacheName, $tableName);
-            if (false === $rs) {
-                $msg = '[DB ERROR]:数据表未发现 -【' . $tableName . '】';
-                $this->connection->db_error($msg);
+            if (false === $cache) {
+                //检测是否存在，并获取数据结构
+                $rs = self::getCache($cacheName, $tableName);
+                if (false === $rs) {
+                    $msg = '[DB ERROR]:数据表未发现 -【' . $tableName . '】';
+                    $this->connection->db_error($msg);
+                }
             }
         }
+
 
         $this->setTables($tableName, $tableAs, $main);
 
@@ -714,16 +717,18 @@ class Analyze
             $fieldConst = $fieldsData[$field];
             unset($fieldsData[$field]);
 
+            //检测是否问号[?]绑定
+            if ($val == '?') {
+                continue;
+            }
+
             //检测是否使用旧版的的数据模式
             if (is_array($val)) {
                 $data[$field] = $this->dealFieldValArr($val, $field);
                 continue;
             }
 
-            //检测是否问号[?]绑定
-            if ($val == '?') {
-                continue;
-            }
+
             //检测是否使用参数绑定
             if (strpos($val, ':') === 0) {
                 $bindKey = substr($val, 1);
@@ -762,22 +767,15 @@ class Analyze
         if ($action == 'insert') {
             $msg = '';
             foreach ($fieldsData as $field => $fieldData) {
-                //自增
-                if ($fieldData['Extra'] == 'auto_increment') {
+                if (
+                    $fieldData['Extra'] == 'auto_increment' ||//自增
+                    $fieldData['Default'] !== null ||//有默认值
+                    $fieldData['Null'] == 'YES'//可为空
+                ) {
                     continue;
                 }
 
-                //有默认值
-                if ($fieldData['Default'] !== null) {
-                    continue;
-                }
-
-                //可为空
-                if ($fieldData['Null'] == 'YES') {
-                    continue;
-                }
-
-                $msg = '【' . $field . '】值内容未设置';
+                $msg = '【' . $field . '】字段值内容未设置';
                 break;
             }
 
@@ -801,20 +799,23 @@ class Analyze
         $realStr = '';
         $count = count($array);
         if ($count == 1) {
-            die('db update value special is error');
+            $msg = '需要更新或者新增数据的语法错误 【'.json_encode($array).'】';
+            $this->connection->db_error($msg);
         }
         $type = strtolower($array[0]);
+        unset($array[0]);
 
         //str sum avg
         switch ($type) {
+            //无计算模式
             case 'str':
+            case 'exp':
                 $realStr = $array[1];
                 break;
 
             //计算差
             case 'minus':
                 $minusV = $array;
-                unset($minusV[0]);
                 if ($count == 2) {
                     $minusV[2] = $minusV[1];
                     $minusV[1] = $field;
@@ -832,11 +833,7 @@ class Analyze
             //计算和
             case 'sum':
                 $sumV = $array;
-                unset($sumV[0]);
                 if ($count == 2) {
-                    if (null === $field) {
-                        die('db sum is error');
-                    }
                     $sumV[2] = $field;
                 }
 
@@ -846,11 +843,10 @@ class Analyze
                     }
                     $realStr .= is_numeric($v) || is_int($v) ? '"' . $v . '"' : '`' . $v . '`';
                 }
-                unset($sumV);
                 break;
 
             default:
-                $realStr = $array[0];
+                $realStr = $array[1];
         }
         return $realStr;
     }

@@ -41,14 +41,20 @@ use PDO;
  * @method Query insert(bool|array $insert = null) static 插入一条记录
  * @method Query fetchSql(bool $fetch = true) static 获取SQL语句，不执行代码
  *
+ * @method Query avg(string $field = '*') static 查询某个字段平均值
+ * @method Query max(string $field = '*') static 查询某个字段最大值
+ * @method Query min(string $field = '*') static 查询某个字段最小值
+ * @method Query sum(string $field = '*') static 查询某个字段总和
+ * @method Query count(string $field = '*') static 查询某个字段总数
  *
- * @method Query query(string $sql,array $bind = [], $fetch = false) static 执行sql语句
+ *
+ * @method array query(string $sql,array $bind = [], $fetch = false) static 执行sql语句
  * @method Query execute(string $sql,array $bind = [], boolean $getLastInsID = false) static 执行sql语句
  *
  *
- * @method Query rowCount() static 返回受影响的数量
- * @method Query getLastSql() static 获取最后一条执行的SQL语句
- * @method Query getLastInsId(string $sequence = null) static 获取最后插入成功的ID
+ * @method int rowCount() static 返回受影响的数量
+ * @method string getLastSql() static 获取最后一条执行的SQL语句
+ * @method int getLastInsId(string $sequence = null) static 获取最后插入成功的ID
  *
  * @method mixed transaction(callable $callback) static 执行数据库事务
  * @method boolean batchQuery(array $sqlArray) static 批处理执行SQL语句

@@ -65,7 +65,7 @@ class App
 
     /**
      * 载入一些环境配置
-     * loaderSytemConnfig
+     * loaderSetting
      */
     static private function loaderSetting()
     {

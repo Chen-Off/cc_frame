@@ -11,8 +11,6 @@ class DeBug {
 
     public static function record($msg, $type) {
         cc__writeTxt(self::$logPath.$type.LOG_EXT, $msg.PHP_EOL);
-
-
     }
 
 

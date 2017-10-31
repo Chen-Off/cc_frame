@@ -290,6 +290,11 @@ class Query
             $tableAs = '';
         }
 
+        /**
+         * eg.
+         * [0 => 'name', 1 => 'password as pwd'];
+         * [0 => 'name', 'pwd' => 'password'];
+         */
 
         foreach ($field as $key => $val) {
             //如果存在别名授予情况，提取别名
@@ -371,6 +376,70 @@ class Query
             $result = [];
         }
         return $result;
+    }
+
+    /**
+     * 获取平均值
+     * @param string $field
+     * @return string
+     */
+    function avg($field = '*') {
+        $as = 'cc_avg';
+        $field = 'AVG(' . $field . ') AS '.$as;
+        $qs = $this->find($field);
+        return $qs[$as];
+    }
+
+
+    /**
+     * 查询某个字段总和
+     * @param string $field
+     * @return string
+     */
+    function sum($field = '*') {
+        $as = 'cc_sum';
+        $field = 'SUM(' . $field . ') AS '.$as;
+        $qs = $this->find($field);
+        return $qs[$as];
+    }
+
+
+    /**
+     * 查询某个字段最大值
+     * @param string $field
+     * @return string
+     */
+    function max($field = '*') {
+        $as = 'cc_max';
+        $field = 'MAX(' . $field . ') AS '.$as;
+        $qs = $this->find($field);
+        return $qs[$as];
+    }
+
+
+    /**
+     * 查询某个字段最小值
+     * @param string $field
+     * @return string
+     */
+    function min($field = '*') {
+        $as = 'cc_min';
+        $field = 'MIN(' . $field . ') AS '.$as;
+        $qs = $this->find($field);
+        return $qs[$as];
+    }
+
+
+    /**
+     * 查询某个字段总数
+     * @param string $field
+     * @return string
+     */
+    function count($field = '*') {
+        $as = 'cc_count';
+        $field = 'COUNT(' . $field . ') AS '.$as;
+        $qs = $this->find($field);
+        return $qs[$as];
     }
 
 

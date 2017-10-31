@@ -138,7 +138,7 @@ class Lang
      */
     private static function completeBaseLang()
     {
-        $funName = '';
+        $funName = [];
         $lang = self::get(URL_MODULES);
         $funName['modules'] = isset($lang['name']) ? $lang['name'] : '主模块';
         $funName['model'] = cc__isset($lang, [URL_MODEL, 'name'], null, '子模块');
@@ -155,12 +155,17 @@ class Lang
      */
     private static function getModulesLang($modules)
     {
+        $range = self::$range;
         $langPath = MVC_CONTROLLER_PATH . $modules . DS . 'lang' . EXT;
+        if(isset(self::$lang[$range][$modules])) {
+            return self::$lang[$range][$modules];
+        }
+
         $ModulesLang = cc__requireFile($langPath, true);
         if (false === $ModulesLang || !is_array($ModulesLang)) {
             $ModulesLang = [];
         } else {
-            self::$lang[self::$range][$modules] = $ModulesLang;
+            self::$lang[$range][$modules] = $ModulesLang;
         }
         return $ModulesLang;
     }
