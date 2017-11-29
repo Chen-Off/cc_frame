@@ -1,4 +1,5 @@
 <?php
+
 namespace cc\db;
 
 use PDO;
@@ -18,6 +19,11 @@ class Connection
 {
     /** @var PDOStatement PDO操作实例 */
     protected $PDOStatement;
+
+    /**
+     * @var string 实例名称
+     */
+    protected $connectName;
 
     /**
      * 数据库操作分析实例
@@ -60,6 +66,7 @@ class Connection
         'port' => '3306',
         'charset' => 'utf8',
         'db_error' => false,
+        'check_desc' => true,
 
         'analyze' => 'mysql',
     ];
@@ -84,6 +91,7 @@ class Connection
         if (!empty($config)) {
             $this->config = array_merge($this->config, $config);
         }
+        $this->connectName = md5(serialize($config));
     }
 
 
@@ -100,6 +108,15 @@ class Connection
             $this->query['database'] = new Query($this);
         }
         return call_user_func_array([$this->query['database'], $method], $args);
+    }
+
+    /**
+     * 获取实例名称
+     * @return string
+     */
+    public function getConnectName()
+    {
+        return $this->connectName;
     }
 
     /**
@@ -239,7 +256,7 @@ class Connection
                 $this->db_error();
             }
             $this->links[$linkNum]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->links[$linkNum]->exec('set names '.$config['charset']);
+            $this->links[$linkNum]->exec('set names ' . $config['charset']);
             //$this->links[$linkNum]->beginTransaction();
         }
 
@@ -298,7 +315,7 @@ class Connection
 
             return $this->getResult($fetch);
         } catch (PDOException $e) {
-            $this->message = '[DB ERROR]：'.$e->getMessage() . '{' . $this->queryStr . '}';
+            $this->message = '[DB ERROR]：' . $e->getMessage() . '{' . $this->queryStr . '}';
             $this->db_error();
             return false;
 
@@ -338,7 +355,7 @@ class Connection
                 return $this->numRows;
             }
         } catch (PDOException $e) {
-            $this->message = '[DB ERROR]：'.$e->getMessage() . '{' . $this->queryStr . '}';
+            $this->message = '[DB ERROR]：' . $e->getMessage() . '{' . $this->queryStr . '}';
             $this->db_error();
 
             //throw new PDOException($e, $this->config, $this->queryStr);
@@ -496,7 +513,7 @@ class Connection
 
     /**
      * getResult 获得数据集
-     * @param $fetch    [description]   是否返回多维数组
+     * @param $fetch [description]   是否返回多维数组
      * @return array
      */
     function getResult($fetch = false)
@@ -619,14 +636,13 @@ class Connection
                 echo "\n" . '<br/>' . "\n" . $this->getError();
             }
 
-            $array =debug_backtrace();
+            $array = debug_backtrace();
             unset($array[0]);
             $html = '';
-            foreach($array as $row)
-            {
+            foreach ($array as $row) {
                 $line = isset($row['line']) ? $row['line'] : '';
                 $file = isset($row['file']) ? $row['file'] : '';
-                $html .= "\n" . '<br/>' . "\n".$file.':'.$line.'行,调用方法:'.$row['function'];
+                $html .= "\n" . '<br/>' . "\n" . $file . ':' . $line . '行,调用方法:' . $row['function'];
             }
             echo $html;
         }

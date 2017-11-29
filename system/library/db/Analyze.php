@@ -17,6 +17,8 @@ class Analyze
      * @var Connection
      */
     protected $connection;
+    protected $connectionArr = [];
+
 
     /**
      * @var Query
@@ -46,6 +48,7 @@ class Analyze
      * @var array
      */
     protected $config = [];
+    protected $configArr = [];
 
 
     // 数据库表达式
@@ -74,8 +77,8 @@ class Analyze
      */
     public function __construct(Connection $connection)
     {
-        $this->connection = $connection;
-        $this->config = $connection->getConfig();
+        //$this->connection = $connection;
+        //$this->config = $connection->getConfig();
     }
 
     /**
@@ -86,6 +89,29 @@ class Analyze
     public function setQuery($query)
     {
         $this->query = $query;
+    }
+
+    public function setConnection($name, $connection) {
+        $this->connectionArr[$name] = $connection;
+    }
+
+    public function getConnection($name)
+    {
+        if (isset($this->connectionArr[$name])) {
+            $this->connection = $this->connectionArr[$name];
+        }
+    }
+
+    public function setConfig($name, $option)
+    {
+        $this->configArr[$name] = $option;
+    }
+
+    public function getConfig($name)
+    {
+        if (isset($this->configArr[$name])) {
+            $this->config = $this->configArr[$name];
+        }
     }
 
     /**
@@ -146,7 +172,7 @@ class Analyze
         $tableName = $tableArr[0];
         $tableAs = isset($tableArr[1]) ? $tableArr[1] : '';
 
-        if(strpos($tableName, '(') ===  false) {
+        if (strpos($tableName, '(') === false) {
             //优先检测缓存
             $cacheName = $this->tableCacheName;
             $cache = self::hasCache($cacheName, $tableName);
@@ -479,7 +505,7 @@ class Analyze
             case in_array($exp, ['=', '<>', '>', '>=', '<', '<=', 'LIKE', 'NOT LIKE']):
                 $value = $this->dealFieldVal($value);
                 //是否属于内查询条件 `c.admin_id = admin_id`
-                if(false === $value['inside']) {
+                if (false === $value['inside']) {
                     $value = '"' . $value['val'] . '"';
                 } else {
                     $value = $value['val'];
@@ -799,7 +825,7 @@ class Analyze
         $realStr = '';
         $count = count($array);
         if ($count == 1) {
-            $msg = '需要更新或者新增数据的语法错误 【'.json_encode($array).'】';
+            $msg = '需要更新或者新增数据的语法错误 【' . json_encode($array) . '】';
             $this->connection->db_error($msg);
         }
         $type = strtolower($array[0]);
@@ -874,11 +900,11 @@ class Analyze
                 break;
 
             case $endStr == '`' :
-                if($startStr == '`') {
+                if ($startStr == '`') {
                     $Inside = true;
                     break;
                 }
-                if(strpos($val, '.') != false && substr($val,strpos($val, '.') +1 , 1) == '`') {
+                if (strpos($val, '.') != false && substr($val, strpos($val, '.') + 1, 1) == '`') {
                     $Inside = true;
                     break;
                 }

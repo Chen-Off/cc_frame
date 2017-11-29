@@ -33,6 +33,11 @@ class Query
      */
     protected $connection;
 
+    /**
+     * @var string 实例名称
+     */
+    protected $connectName;
+
     // 当前模型类名称
     protected $model;
 
@@ -57,12 +62,21 @@ class Query
      */
     public function __construct($connection = null)
     {
-        $this->connection = $connection ?: Db::connect([], true);
+        $this->connection = $connection ? : Db::connect([], true);
 
         //表前缀
         $this->prefix = $this->connection->getConfig('db_prefix');
         //表分析实例
         $this->analyze = $this->connection->getConfig('analyze');
+        //设置表分析实例用途的配置名称
+        $this->connectName = $this->connection->getConnectName();
+
+        //设置数据库实例
+        $this->Analyze()->setConnection($this->connectName, $this->connection);
+
+        //设置数据库配置组
+        $this->Analyze()->setConfig($this->connectName, $this->getConfig());
+
         if (!empty($this->prefix)) $this->prefix .= '_';
         $this->free();
     }
@@ -175,8 +189,11 @@ class Query
             $class = false !== strpos($driver, '\\') ? $driver : '\\cc\\db\\Analyze';
             $analyze[$driver] = new $class($this->connection);
         }
-        // 设置当前查询对象
+
+        //设置当前查询对象
         $analyze[$driver]->setQuery($this);
+        $analyze[$driver]->getConnection($this->connectName);
+        $analyze[$driver]->getConfig($this->connectName);
         return $analyze[$driver];
     }
 
@@ -230,7 +247,6 @@ class Query
         //加入缓存
         $this->Analyze()->parseTable($table, true);
         $this->options['table'] = $table;
-        //$this->options['table'] = $this->Analyze()->parseTable($table, true);
         return $this;
     }
 
@@ -411,6 +427,7 @@ class Query
      */
     function max($field = '*') {
         $as = 'cc_max';
+        $this->field($field);
         $field = 'MAX(' . $field . ') AS '.$as;
         $qs = $this->find($field);
         return $qs[$as];
