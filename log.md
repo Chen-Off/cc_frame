@@ -1,5 +1,16 @@
 # 问题日志
 
+【2017年11月28日】Db 基本类 设置多数据库访问时，无法切换访问的配置，只能访问第一个链接的数据库配置
+------
+完成时间：2017年11月29日 <br>
+详细： <br>
+修改文件`system/library/db/Query.php`<br>
+修改文件`system/library/db/Connection.php`<br>
+修改文件`system/library/db/Analyze.php`<br>
+
+应为只会加载一次Analyze。导致Db 实例和数据库配置只会加载一次
+再唤起 Analyze 表达式处理类的时候，为其追加数据库Db实例和数据库配置的数组数据，调用的时候，通过独立的实例名称头，加载对应的Db实例和数据库配置
+```
 
 【2017年10月31日】Db 基本类模拟ThinkPHP 查询功能优化操作
 ------
