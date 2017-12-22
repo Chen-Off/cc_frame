@@ -22,8 +22,6 @@ $bind = ['haha','hehe'];
 Db::table('admin')->bind($bind)->insertAll('admin_id');
 ```
 
-应为只会加载一次Analyze。导致Db 实例和数据库配置只会加载一次
-再唤起 Analyze 表达式处理类的时候，为其追加数据库Db实例和数据库配置的数组数据，调用的时候，通过独立的实例名称头，加载对应的Db实例和数据库配置
 
 
 
