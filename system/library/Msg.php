@@ -29,7 +29,7 @@ class Msg
 
         if (isset($_SESSION['messageToStack']) && !empty($_SESSION['messageToStack'])) {
             self::$messages = $_SESSION['messageToStack'];
-            $_SESSION['messageToStack'] = '';
+            $_SESSION['messageToStack'] = [];
         }
     }
 
@@ -98,8 +98,8 @@ class Msg
      */
     static function add_session($msg, $type = 'error', $page = null)
     {
-        if (!isset($_SESSION['messageToStack'])) {
-            $messageToStack = array();
+        if (!isset($_SESSION['messageToStack']) || !is_array($_SESSION['messageToStack'])) {
+            $messageToStack = [];
         } else {
             $messageToStack = $_SESSION['messageToStack'];
         }
@@ -134,7 +134,8 @@ class Msg
                 break;
         }
 
-        $messageToStack[] = array_merge($url, ['text' => $msg, 'type' => $type]);
+        $arr =  ['text' => $msg, 'type' => $type];
+        $messageToStack[] = array_merge($url, $arr);
         $_SESSION['messageToStack'] = $messageToStack;
         self::$messages = $messageToStack;
         //return self::output();

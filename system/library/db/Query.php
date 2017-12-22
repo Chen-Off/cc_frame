@@ -343,13 +343,14 @@ class Query
             $this->field($fields);
         }
 
-        $sql = $this->Analyze()->select($this->options);
+        $options = $this->options;
+        $sql = $this->Analyze()->select($options);
 
         // 获取参数绑定
         $bind = $this->getBind();
 
         $this->free();
-        if (true === $this->options['fetch_sql']) {
+        if (true === $options['fetch_sql']) {
             // 获取实际执行的SQL语句
             return $this->connection->getRealSql($sql, $bind);
         }
@@ -383,6 +384,7 @@ class Query
         $this->free();
         if (true === $options['fetch_sql']) {
             // 获取实际执行的SQL语句
+            var_dump($bind);
             return $this->connection->getRealSql($sql, $bind);
         }
 
@@ -459,6 +461,31 @@ class Query
         return $qs[$as];
     }
 
+
+    /**
+     * insert
+     * @param null $newData [description]   参数数据
+     * @return array|int|PDOStatement|string
+     */
+    function insertAll($newData = null) {
+
+        $options = $this->options;
+
+        //检测字段和参数
+        $sql = $this->Analyze()->insertAll($newData, $options);
+
+        // 获取参数绑定
+        $bind = $this->getBind();
+        $this->free();
+        if (true === $options['fetch_sql']) {
+            // 获取实际执行的SQL语句
+            return $this->connection->getRealSql($sql, $bind);
+        }
+
+        // 执行操作
+        $lastInsertID = $this->execute($sql, $bind, true);
+        return $lastInsertID;
+    }
 
     /**
      * insert
@@ -654,9 +681,10 @@ class Query
         if (is_array($key)) {
             $this->bind = array_merge($this->bind, $key);
         } else {
-            if (null === $value && !is_int($key)) {
+            if (null === $value) {
                 $this->bind[0] = [$key, $type];
             } elseif (is_int($key) && null !== $value) {
+
                 $this->bind[$key] = [$value, $type];
             }
         }

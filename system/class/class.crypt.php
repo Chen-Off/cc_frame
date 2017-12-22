@@ -10,6 +10,8 @@
 
 namespace ccCrypt;
 
+use Couchbase\Exception;
+
 class ccCrypt
 {
     public $key;
@@ -36,6 +38,7 @@ class ccCrypt
         try {
             //$key = hash('sha256', $text, true);
 
+            /*
             //获得16位随机字符串，填充到明文之前
             $randStr = cc__getRandStr('all', 16);
             $text = $randStr . pack("N", strlen($text)) . $text;
@@ -51,6 +54,18 @@ class ccCrypt
             mcrypt_generic_deinit($module);
             mcrypt_module_close($module);
             $encrypt_data = base64_encode($encrypt_data);
+            */
+
+            //获得16位随机字符串，填充到明文之前
+            $randStr = cc__getRandStr('all', 16);
+            $text = $randStr . pack("N", strlen($text)) . $text;
+            $iv = substr($this->key, 0, 16);
+
+            //使用自定义的填充方式对明文进行补位填充
+            $pkc_encoder = new PKCS7Encoder;
+            $text = $pkc_encoder->encode($text);
+            $encrypt_data = openssl_encrypt($text,'AES-256-CBC',substr($this->key, 0, 32),OPENSSL_ZERO_PADDING,$iv);
+
             return ['success', $encrypt_data];
         } catch (Exception $e) {
             return ['error', ''];
@@ -67,6 +82,7 @@ class ccCrypt
         try {
             //$key = hash('sha256', $text, true);
 
+            /*
             //使用BASE64对需要解密的字符串进行解码
             $cipherText_dec = base64_decode($encrypted);
             $module = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
@@ -77,6 +93,12 @@ class ccCrypt
             $decrypted = mdecrypt_generic($module, $cipherText_dec);
             mcrypt_generic_deinit($module);
             mcrypt_module_close($module);
+            */
+
+
+            $key = $this->key;
+            $iv = substr($this->key, 0, 16);
+            $decrypted = openssl_decrypt($encrypted,'AES-256-CBC',$key,OPENSSL_ZERO_PADDING,$iv);
         } catch (Exception $e) {
             return ['error', ''];
         }

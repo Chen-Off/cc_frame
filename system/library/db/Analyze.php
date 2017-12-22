@@ -67,6 +67,7 @@ class Analyze
     // SQL表达式
     protected $selectSql = 'SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
     protected $insertSql = '%INSERT% INTO %TABLE% (%FIELD%) VALUES (%DATA%) %COMMENT%';
+    protected $insertAllSql = 'INSERT INTO %TABLE% (%FIELD%) VALUES (%DATA%) %COMMENT%';
     protected $updateSql = 'UPDATE %TABLE% SET %SET% %JOIN% %WHERE% %ORDER% %LIMIT% %COMMENT%';
     protected $deleteSql = 'DELETE FROM %TABLE% %USING% %JOIN% %WHERE% %ORDER% %LIMIT% %COMMENT%';
 
@@ -665,6 +666,39 @@ class Analyze
     }
 
     /**
+     * 批量插入
+     * @param $dataSet
+     * @param $options
+     * @return mixed
+     */
+    public function insertAll($dataSet, $options)
+    {
+        // 分析并处理数据
+        $fields = [];
+        $values = [];
+        foreach ($dataSet as $data) {
+            $data = $this->parseData($data, $options);
+            if(empty($fields)) {
+                $fields = array_keys($data);
+            }
+            $data = array_values($data);
+            $values[] = implode(' , ', $data);
+        }
+
+        $sql = str_replace(
+            ['%TABLE%', '%FIELD%', '%DATA%', '%COMMENT%'],
+            [
+                $this->parseTable($options['table']),
+                implode(' , ', $fields),
+                implode('), (', $values),
+                $this->parseComment($options['comment']),
+            ], $this->insertAllSql);
+
+        return $sql;
+    }
+
+
+    /**
      * 插入数据
      * @param array $options [description]   参数数据
      * @return int|string
@@ -685,6 +719,7 @@ class Analyze
                 implode(' , ', $values),
                 $this->parseComment($options['comment']),
             ], $this->insertSql);
+
 
         return $sql;
     }

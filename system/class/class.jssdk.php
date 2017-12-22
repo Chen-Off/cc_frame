@@ -1,5 +1,7 @@
 <?php
+
 namespace weChatJSSDK;
+
 use cc\Db;
 
 class JSSDK
@@ -7,13 +9,14 @@ class JSSDK
     private $appId;
     private $gzh_id;
     private $appSecret;
-    private $openId, $cookie_signature;
-    public $jsAccessTokenDir = PUBLIC_DATA_PATH.'js_cache'.DS;
+    private $redirect_uri;
+    public $openId = '', $cookie_signature = '', $jsAccessToken = '', $unionId = '';
+    public $jsAccessTokenDir = PUBLIC_DATA_PATH . 'js_cache' . DS;
 
 
     public function __construct($option)
     {
-        if(!is_dir($this->jsAccessTokenDir)) {
+        if (!is_dir($this->jsAccessTokenDir)) {
             mkdir($this->jsAccessTokenDir, 0755, true);
         }
         $this->gzh_id = $option['gzh_id'];
@@ -21,12 +24,21 @@ class JSSDK
         $this->appSecret = $option['appsecret'];
     }
 
-
-    public function getCustomerBase()
+    /**
+     * 设置需要静默授权的链接
+     * @param $url
+     */
+    public function setRedirectUri($url)
     {
-
+        if (!empty($url)) {
+            $this->redirect_uri = $url;
+        }
     }
 
+    /**
+     * getJsAccessToken
+     * 拉取微信用户openID 和登陆token,cookie
+     */
     public function getJsAccessToken()
     {
         $jsAccessToken = '';
@@ -36,23 +48,23 @@ class JSSDK
         if (isset($_COOKIE['cookie_signature']) && !empty($_COOKIE['cookie_signature'])) {
             $cookie_signature = $_COOKIE['cookie_signature'];
             //获取oAuto_session
-            $filename = sha1($cookie_signature).'.log';
+            $filename = sha1($cookie_signature) . '.log';
             $data = json_decode($this->get_log_file($filename));
 
 
             //检测参数是否存在
-            if(isset($data->expire_time) && isset($data->refresh_expire_time) && isset($data->refresh_expire_time) && isset($data->access_token) && isset($data->refresh_token) && isset($data->openid) && isset($data->scope)) {
+            if (isset($data->expire_time) && isset($data->refresh_expire_time) && isset($data->refresh_expire_time) && isset($data->access_token) && isset($data->refresh_token) && isset($data->openid) && isset($data->scope)) {
                 //检测是否未过期
-                if($data->expire_time > time()) {
+                if ($data->expire_time > time()) {
                     $jsAccessToken = $data->access_token;
                     $this->openId = $data->openid;
                     $this->cookie_signature = $cookie_signature;
                 } else {
                     //accessToken刷新期限为过期
-                    if($data->refresh_expire_time > time() && !empty($data->refresh_token)) {
-                        $url = 'https://api.weixin.qq.com/sns/oauth2/refresh_token?appid='.$this->appId.'&grant_type=refresh_token&refresh_token='.$data->refresh_token;
+                    if ($data->refresh_expire_time > time() && !empty($data->refresh_token)) {
+                        $url = 'https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=' . $this->appId . '&grant_type=refresh_token&refresh_token=' . $data->refresh_token;
                         $res = json_decode($this->http_get($url));
-                        if(isset($res->access_token)) {
+                        if (isset($res->access_token)) {
                             $jsAccessToken = $res->access_token;
                             $newGetData = $res;
                             //删除旧的log
@@ -64,52 +76,91 @@ class JSSDK
         }
 
         //为空重新获取
-        if(empty($jsAccessToken)) {
+        if (empty($jsAccessToken)) {
             //检查是否为关注用户从公众号访问中静默跳转访问
             if (isset($_GET['code']) && !empty($_GET['code'])) {
                 $url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid=' . $this->appId . '&secret=' . $this->appSecret . '&code=' . $_GET['code'] . '&grant_type=authorization_code';
 
                 $res = json_decode($this->http_get($url));
-                if(isset($res->access_token)) {
-                    $jsAccessToken = $res->access_token;
+                if (isset($res->access_token)) {
                     $newGetData = $res;
+                    $jsAccessToken = $res->access_token;
                 }
             }
         }
+        $this->jsAccessToken = $jsAccessToken;
 
         //新获取的数据，重新写入log
-        if(false !== $newGetData) {
+        if (false !== $newGetData) {
             unset($newGetData->expires_in);
             $this->openId = $newGetData->openid;
             $newGetData->expire_time = time() + 7000;
             $newGetData->refresh_expire_time = strtotime('+ 29 day');
 
             $cookie_signature = $this->createNonceStr(26);
-            $filename = sha1($cookie_signature).'.log';
+            $filename = sha1($cookie_signature) . '.log';
             $this->set_log_file($filename, json_encode($newGetData));
             setcookie('cookie_signature', $cookie_signature, $newGetData->refresh_expire_time);
             $this->cookie_signature = $cookie_signature;
         }
-        return $jsAccessToken;
     }
 
-    public function get_snsapi_bas_code($url) {
-        $openUrl = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=' . $this->appId . '&redirect_uri='.urlencode($url).'&response_type=code&scope=snsapi_base&state=123#wechat_redirect';
+
+    public function get_snsapi_userinfo_code($url)
+    {
+        $openUrl = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=' . $this->appId . '&redirect_uri=' . urlencode($url) . '&response_type=code&scope=snsapi_userinfo&state=snsapi_userinfo#wechat_redirect';
 
         $res = json_decode($this->http_get($openUrl));
         return $res;
     }
 
+    public function get_snsapi_base_code($url)
+    {
+        $openUrl = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=' . $this->appId . '&redirect_uri=' . urlencode($url) . '&response_type=code&scope=snsapi_base&state=snsapi_base#wechat_redirect';
+
+        $res = json_decode($this->http_get($openUrl));
+        return $res;
+    }
+
+    /**
+     * 获取账户基本信息
+     * @return array
+     */
     public function getCustomerInfo()
     {
         $info = [];
         //先获取JS-SDK access_token
-        $jsAccessToken = $this->getJsAccessToken();
+        $this->getJsAccessToken();
 
         $info['openId'] = $this->openId;
         $info['cookie_signature'] = $this->cookie_signature;
         return $info;
-        //$url = 'https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN';
+    }
+
+
+    /**
+     * 载入微信用户详细信息
+     * @return bool|mixed
+     */
+    public function getCustomerDetail()
+    {
+        $url = 'https://api.weixin.qq.com/sns/userinfo?access_token=' . $this->jsAccessToken . '&openid=' . $this->openId . '&lang=zh_CN';
+
+        $detail = json_decode($this->http_get($url), true);
+        switch (true) {
+            case !isset($detail['openid']):
+                return false;
+                break;
+            case $detail['unionid']:
+                $this->unionId = $detail['unionid'];
+                break;
+
+            case isset($detail['errcode']):
+                return $detail['errcode'];
+                break;
+            default:
+        }
+        return $detail;
     }
 
 
@@ -121,10 +172,10 @@ class JSSDK
     {
         $signPackage = ['appId' => $this->appId, 'nonceStr' => '', 'timestamp' => '', 'url' => '', 'signature' => '', 'rawString' => ''];
         $jsApiTicket = $this->getJsApiTicket();
-        if(false !== $jsApiTicket) {
+        if (false !== $jsApiTicket) {
             // 注意 URL 一定要动态获取，不能 hardcode.
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-            $url = $protocol.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+            $url = $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
             $timestamp = time();
             $nonceStr = $this->createNonceStr();
@@ -175,7 +226,7 @@ class JSSDK
 
         //空值，重新获取
         $accessToken = $this->getAccessToken();
-        if(false !== $accessToken) {
+        if (false !== $accessToken) {
             // 如果是企业号用以下 URL 获取 ticket
             //$url = "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=$accessToken";
             $url = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?type=jsapi&access_token=$accessToken";
@@ -280,8 +331,8 @@ class JSSDK
     private function get_log_file($filename)
     {
         //改变路径
-        $filename = $this->jsAccessTokenDir  . $filename;
-        if(is_file($filename)) {
+        $filename = $this->jsAccessTokenDir . $filename;
+        if (is_file($filename)) {
             return trim(file_get_contents($filename));
         } else {
             return '';
@@ -291,7 +342,7 @@ class JSSDK
     private function set_log_file($filename, $content)
     {
         //改变路径
-        $filename = $this->jsAccessTokenDir  . $filename;
+        $filename = $this->jsAccessTokenDir . $filename;
         $fp = fopen($filename, "w+");
         fwrite($fp, $content);
         fclose($fp);
@@ -302,19 +353,20 @@ class JSSDK
      * @param $type
      * @return false|string
      */
-    public function db_get_auth($type) {
-        if(!in_array($type, ['access_token', 'jsapi_ticket' , 'api_ticket'])) {
+    public function db_get_auth($type)
+    {
+        if (!in_array($type, ['access_token', 'jsapi_ticket', 'api_ticket'])) {
             return false;
         }
-        
+
         $where = [
-            'type = '.$type,
-            'gzh_id ='. $this->gzh_id
+            'type = ' . $type,
+            'gzh_id =' . $this->gzh_id
         ];
         $info = Db::table('wechat_gzh_session')->where($where)->find('content, expired_time');
 
-        if(!empty($info)) {
-            if($info['expired_time'] > time()) {
+        if (!empty($info)) {
+            if ($info['expired_time'] > time()) {
                 $value = $info['content'];
                 //检测是否有效
                 //$this->getOauthAuth($access_token);
@@ -335,12 +387,13 @@ class JSSDK
      * @param $content
      * @param $expire
      */
-    public function db_set_auth($type, $content, $expire) {
+    public function db_set_auth($type, $content, $expire)
+    {
         $gzh_id = $this->gzh_id;
-        if(in_array($type, ['access_token', 'jsapi_ticket' , 'api_ticket'])) {
+        if (in_array($type, ['access_token', 'jsapi_ticket', 'api_ticket'])) {
             $where = [
-                'type = '.$type,
-                'gzh_id ='. $gzh_id
+                'type = ' . $type,
+                'gzh_id =' . $gzh_id
             ];
             Db::table('wechat_gzh_session')->where($where)->delete();
 
@@ -360,12 +413,13 @@ class JSSDK
      * @param $type
      * @return false|string
      */
-    public function db_del_auth($type) {
+    public function db_del_auth($type)
+    {
         $gzh_id = $this->gzh_id;
-        if(in_array($type, ['access_token', 'jsapi_ticket' , 'api_ticket'])) {
+        if (in_array($type, ['access_token', 'jsapi_ticket', 'api_ticket'])) {
             $where = [
-                'type = '.$type,
-                'gzh_id ='. $gzh_id
+                'type = ' . $type,
+                'gzh_id =' . $gzh_id
             ];
             Db::table('wechat_gzh_session')->where($where)->delete();
         }

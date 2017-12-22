@@ -226,7 +226,7 @@ function cc__isset($array, $params = [], $empty = null, $falseReturn = false)
 /**
  * cc__getCookie 获取 Cooke 的某个值
  * @param $name
- * @return bool
+ * @return bool|string
  */
 function cc__getCookie($name)
 {
@@ -717,6 +717,29 @@ function cc__detectIp($ip)
     return $result;
 }
 
+
+/**
+ * @param $url
+ * @return bool|mixed
+ */
+function cc__curlGet($url) {
+    $oCurl = curl_init();
+    if (stripos($url, "https://") !== FALSE) {
+        curl_setopt($oCurl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($oCurl, CURLOPT_SSL_VERIFYHOST, FALSE);
+        curl_setopt($oCurl, CURLOPT_SSLVERSION, 1); //CURL_SSLVERSION_TLSv1
+    }
+    curl_setopt($oCurl, CURLOPT_URL, $url);
+    curl_setopt($oCurl, CURLOPT_RETURNTRANSFER, 1);
+    $sContent = curl_exec($oCurl);
+    $aStatus = curl_getinfo($oCurl);
+    curl_close($oCurl);
+    if (intval($aStatus["http_code"]) == 200) {
+        return $sContent;
+    } else {
+        return false;
+    }
+}
 
 /**
  * 写入TXT 文件

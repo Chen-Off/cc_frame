@@ -280,7 +280,8 @@ class File extends Driver
         if(false !== $content) {
             if(!is_array($content)) {
                 if($content == $value) {
-                    return $this->unlink($this->getCacheKey($name));
+                    return $this->set($name, '');
+                    //return $this->unlink($this->getCacheKey($name));
                 } else {
                     return false;
                 }
@@ -294,7 +295,8 @@ class File extends Driver
             $expire = empty($this->nowExpire) ? $this->options['expire'] : $this->nowExpire;
             return $this->set($name, $content, $expire);
         } else {
-            return $this->set($name, $value);
+            return false;
+            //return $this->set($name, $value);
         }
     }
 

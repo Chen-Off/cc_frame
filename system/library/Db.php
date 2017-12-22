@@ -122,6 +122,7 @@ class Db
                 self::$msg = '数据库表前缀未配置';
                 break;
         }
+
         if(!empty(self::$msg)) {
             DeBug::msgExit(self::$msg);
         }

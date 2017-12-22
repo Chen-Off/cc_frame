@@ -3,14 +3,18 @@ namespace cc;
 
 class DeBug {
     private static $logPath = '';
-    function __construct()
-    {
-        self::$logPath = TEMP_EP_PATH.DS.'log'.DS;
-        if(!is_dir(self::$logPath)) mkdir(self::$logPath, 0744, true);
-    }
 
     public static function record($msg, $type) {
-        cc__writeTxt(self::$logPath.$type.LOG_EXT, $msg.PHP_EOL);
+        $fileName = self::getLogPath().date('Y-m-d').'_'.$type.LOG_EXT;
+        cc__writeTxt($fileName, $msg.PHP_EOL,'a');
+    }
+
+    private static function getLogPath() {
+        if(empty(self::$logPath)) {
+            self::$logPath = TEMP_EP_PATH.'log'.DS;
+            if(!is_dir(self::$logPath)) mkdir(self::$logPath, 0744, true);
+        }
+        return self::$logPath;
     }
 
 

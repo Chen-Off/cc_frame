@@ -2,6 +2,7 @@
 
 namespace cc\db;
 
+use cc\DeBug;
 use PDO;
 use PDOStatement;
 use PDOException;
@@ -627,23 +628,26 @@ class Connection
      */
     function db_error($message = null)
     {
+        $html = '';
+        if (null === $message) $message = $this->message;
+        if (empty($message)) {
+            $html .=  "\n" . '<br/>' . "\n" . $this->getError();
+        } else {
+            $html .= $message;
+        }
+
+        $array = debug_backtrace();
+        unset($array[0]);
+
+        foreach ($array as $row) {
+            $line = isset($row['line']) ? $row['line'] : '';
+            $file = isset($row['file']) ? $row['file'] : '';
+            $html .= "\n" . '<br/>' . "\n" . $file . ':' . $line . '行,调用方法:' . $row['function'];
+        }
+
+        DeBug::record(strip_tags($html), 'DB');
+
         if ($this->config['db_error'] === true) {
-            if (null === $message) $message = $this->message;
-
-            if (!empty($message)) {
-                echo $message;
-            } else {
-                echo "\n" . '<br/>' . "\n" . $this->getError();
-            }
-
-            $array = debug_backtrace();
-            unset($array[0]);
-            $html = '';
-            foreach ($array as $row) {
-                $line = isset($row['line']) ? $row['line'] : '';
-                $file = isset($row['file']) ? $row['file'] : '';
-                $html .= "\n" . '<br/>' . "\n" . $file . ':' . $line . '行,调用方法:' . $row['function'];
-            }
             echo $html;
         }
         die;
