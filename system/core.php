@@ -75,6 +75,9 @@ class App
             error_reporting(E_ALL);
         } else {
             error_reporting(0);
+            ini_set('display_errors',0);
+            //ini_set('log_errors',1);
+            //ini_set('error_log','E:\\'.date('Y-m-d').'_kjcms.com.txt') ;
         }
         date_default_timezone_set($config['timezone']);//设置时区
         ini_set('memory_limit', $config['memory_limit']);//设置内存大小
@@ -398,6 +401,10 @@ class startApp
 
     public static function appExit($msg)
     {
-        exit($msg);
+        if(true === Config::getCB('system','debug_show')) {
+            exit($msg);
+        } else {
+            die;
+        }
     }
 }

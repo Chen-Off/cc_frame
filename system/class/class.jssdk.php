@@ -147,17 +147,18 @@ class JSSDK
         $url = 'https://api.weixin.qq.com/sns/userinfo?access_token=' . $this->jsAccessToken . '&openid=' . $this->openId . '&lang=zh_CN';
 
         $detail = json_decode($this->http_get($url), true);
+        if(isset($detail['unionid'])) {
+            $this->unionId = $detail['unionid'];
+        }
         switch (true) {
+            case isset($detail['errcode']) && !empty($detail['errcode']):
+                return $detail['errcode'];
+                break;
+
             case !isset($detail['openid']):
                 return false;
                 break;
-            case $detail['unionid']:
-                $this->unionId = $detail['unionid'];
-                break;
 
-            case isset($detail['errcode']):
-                return $detail['errcode'];
-                break;
             default:
         }
         return $detail;
