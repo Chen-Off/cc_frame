@@ -17,14 +17,15 @@ $insert = [
  ['name' => ':name_1', 'tel' => '123456789'],
  ['name' => ':name_2', 'tel' => '123456789'],
 ];
-
 $bind = ['name_1' => 'tata', 'name_2' => 'lulu'];
+Db::table('admin')->bind($bind)->insertAll($insert);
+
 $insert = [
  ['name' => '?', 'tel' => '123456789'],
  ['name' => '?', 'tel' => '123456789'],
 ];
 $bind = ['haha','hehe'];
-Db::table('admin')->bind($bind)->insertAll('admin_id');
+Db::table('admin')->bind($bind)->insertAll($insert);
 ```
 
 
